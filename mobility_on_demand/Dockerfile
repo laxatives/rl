@@ -12,7 +12,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 
 ENV PATH /opt/conda/bin:$PATH
 
-COPY . /app
+COPY environment.yml /app/
 WORKDIR /app
 
 # Create the environment:
@@ -20,6 +20,8 @@ RUN conda env create -f environment.yml
 
 # Make RUN commands use the new environment:
 SHELL ["conda", "run", "-n", "kddcup", "/bin/bash", "-c"]
+
+COPY . /app/
 
 ENTRYPOINT ["python", "local_test.py"]
 
