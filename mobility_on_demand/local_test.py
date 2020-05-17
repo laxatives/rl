@@ -2,9 +2,10 @@
 # @File: local_test.py
 # @Author: Xiaocheng Tang
 # @Date:   2020-03-17 17:15:49
+import json
 import os
 import sys
-import json
+
 from pprint import pformat
 
 

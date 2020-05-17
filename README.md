@@ -22,3 +22,11 @@ Although this is a toy-problem, Value Iteration forms the basis for many algorit
 Algorithms in chapters 3-6 (Linear Programming, Dynamic Programming, Monte Carlo Control/Prediction, Temporal Difference Control/Prediction On/Off Policy)
 
 [nbviewer](https://nbviewer.jupyter.org/url/github.com/laxatives/rl/blob/master/gridworld_mdp.ipynb)
+
+# Other Applications
+
+## ACM SIGKDD CUP 2020: Learning to Dispatch and Reposition
+
+![kddcup](images/kddcup_05_16.png)
+
+Work in progress...
