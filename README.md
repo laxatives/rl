@@ -1,7 +1,7 @@
 # Reinforcement Learning
-Examples from Sutton and Barto
+Implementations to problems described in Sutton & Barto
 
-## Exercise 5.12: Racetrack
+## Sutton & Barto Exercise 5.12: Racetrack
 
 ![racetrack](images/john_hunter_2020.gif)
 
@@ -18,7 +18,7 @@ In this GIF, we display the expected remaining time to complete a right-hand tur
 Although this is a toy-problem, Value Iteration forms the basis for many algorithms used in Reinforcement Learning and robotics. The same principle can be applied to continuous state spaces with infinite actions as well as to noisy and complex environments.
 
 
-##  Example 3.5/3.8: Gridworld
+## Sutton & Barto Example 3.5/3.8: Gridworld
 
 ![gridworld](images/qlearning.png)
 
