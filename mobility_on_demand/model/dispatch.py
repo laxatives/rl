@@ -141,11 +141,11 @@ class Dql(Dispatcher):
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            for values in (self.values_left, self.values_right):
-                v0 = values[driver.location]
-                # TODO: use idle transition probabilities
-                v1 = values[driver.location]  # Driver hasn't moved if idle
-                values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
+            values = random.choice((self.values_left, self.values_right))
+            v0 = values[driver.location]
+            # TODO: use idle transition probabilities
+            v1 = values[driver.location]  # Driver hasn't moved if idle
+            values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
 
     def state_value(self, grid_id: str) -> int:
