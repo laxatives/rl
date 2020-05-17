@@ -5,7 +5,7 @@
 import os
 
 import utils
-from dispatch import Sarsa
+from dispatch import Dql
 from utils import RepositionData
 
 
@@ -15,7 +15,7 @@ MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TODO')
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
     def __init__(self, alpha=2/(5*60), gamma=0.9, idle_reward=-2/(60*60)):
-        self.dispatcher = Sarsa(alpha, gamma, idle_reward)
+        self.dispatcher = Dql(alpha, gamma, idle_reward)
         self.last_dispatch = {}
         self.last_reposition = {}
 

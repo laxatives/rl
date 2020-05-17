@@ -70,36 +70,15 @@ class Sarsa(Dispatcher):
 class Dql(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.values_left = collections.defaultdict(int)  # Expected reward for a driver in each geohash
-        self.values_right = collections.defaultdict(int)  # Expected reward for a driver in each geohash
+        self.values_left = collections.defaultdict(int)
+        self.values_right = collections.defaultdict(int)
 
-    def policy(self, state_values, request, candidates, drivers, assigned_driver_ids):
+
+    def _joint_policy(self, request, candidates, drivers, assigned_driver_ids):
         best_candidate: DispatchCandidate = None
         best_update: int = 0  # Wait if value is negative
 
         for candidate in sorted(candidates[request.request_id], key=lambda x: x.eta,
-                                reverse=True):  # type: DispatchCandidate
-            if candidate.driver_id in assigned_driver_ids:
-                continue
-
-            driver = drivers[candidate.driver_id]
-            v0 = state_values[driver.location]  # Value of the driver current position
-            v1 = state_values[request.end_loc]  # Value of the proposed new position
-            reward = request.reward
-
-            # TODO: penalize cancellation rate
-            # Best incremental improvement (get the ride AND improve driver position)
-            update = reward + self.gamma * v1 - v0
-            if update > best_update:
-                best_update, best_candidate = update, candidate
-        return best_candidate
-
-
-    def joint_policy(self, request, candidates, drivers, assigned_driver_ids):
-        best_candidate: DispatchCandidate = None
-        best_update: int = 0  # Wait if value is negative
-
-        for candidate in sorted(candidates[request.request_id], key=lambda x: x.distance,
                                 reverse=True):  # type: DispatchCandidate
             if candidate.driver_id in assigned_driver_ids:
                 continue
@@ -124,7 +103,7 @@ class Dql(Dispatcher):
 
         # Greedily match highest reward requests first
         for request in sorted(requests.values(), key=lambda x: x.reward, reverse=True):  # type: Request
-            for candidate in sorted(candidates[request.request_id], key=lambda x: x.distance,
+            for candidate in sorted(candidates[request.request_id], key=lambda x: x.eta,
                                     reverse=True):  # type: DispatchCandidate
                 if candidate.driver_id in assigned_driver_ids:
                     continue
@@ -144,7 +123,7 @@ class Dql(Dispatcher):
                 student[driver.location] += self.alpha * (request.reward + self.gamma * q1 - q0)
 
             # Assign driver
-            selected = self.joint_policy(request, candidates, drivers, assigned_driver_ids)
+            selected = self._joint_policy(request, candidates, drivers, assigned_driver_ids)
             if selected:
                 assigned_driver_ids.add(selected.driver_id)
                 dispatch[request.request_id] = selected
