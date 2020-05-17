@@ -3,7 +3,8 @@ FROM centos:7.2.1511
 RUN yum install -y \
      vim\
      python-pip\
-     wget
+     wget\
+     cmake
 
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/anaconda.sh && \
     /bin/bash ~/anaconda.sh -b -p /opt/conda && \

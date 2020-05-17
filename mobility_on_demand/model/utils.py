@@ -2,6 +2,7 @@ import collections
 import re
 from typing import Any, Dict, List, Set, Tuple
 
+
 # Apparently these aren't correct...
 LAT_RANGE = (30.652828, 30.727818)
 LNG_RANGE = (104.042102, 104.129591)
@@ -65,7 +66,7 @@ def parse_dispatch(dispatch_input: Dict[str, Any]) -> (Dict[str, Driver], Dict[s
 def loc_to_grid(location: Tuple[float, float]) -> str:
     # TODO: Convert to Didi grid
     # Apparently we can't use libraries...
-    # h3.geo_to_h3(location[1], location[0], h3_resolution)
+    #h3.geo_to_h3(location[1], location[0], h3_resolution)
 
     # This is terrible
     return f'{location[1]:0.2f},{location[0]:0.2f}'
