@@ -19,7 +19,10 @@ Although this is a toy-problem, Value Iteration forms the basis for many algorit
 
 
 ##  Example 3.5/3.8: Gridworld
-Solutions to the Gridworld example using algorithms described in chapters 3-7:
+
+![gridworld](images/qlearning.png)
+
+Illustrated solutions to the Gridworld example using algorithms described in chapters 3-7:
 
 - Linear Programming
 - Dynamic Programming
@@ -35,8 +38,6 @@ Solutions to the Gridworld example using algorithms described in chapters 3-7:
     - Off Policy (Q-Learning)
     - Off Policy (Double Q Learning)
 - N-Step TD
-
-![gridworld](images/qlearning.png)
 
 [nbviewer](https://nbviewer.jupyter.org/url/github.com/laxatives/rl/blob/master/gridworld_mdp.ipynb)
 
