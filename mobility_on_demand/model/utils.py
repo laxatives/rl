@@ -1,9 +1,11 @@
 import collections
-from typing import Any, Dict, Set, Tuple
+from h3 import h3
+from typing import Any, Dict, List, Set, Tuple
 
-
+# Apparently these aren't correct...
 LAT_RANGE = (30.652828, 30.727818)
 LNG_RANGE = (104.042102, 104.129591)
+
 
 class Driver:
     def __init__(self, od, h3_resolution):
@@ -42,10 +44,9 @@ class DispatchCandidate:
 class RepositionData:
     def __init__(self, r):
         self.timestamp = r['timestamp']
-        self.driver_ids = []
+        self.drivers = []
         for d in r['driver_info']:
-            # Didi GridID is also available as d['grid_id]
-            self.driver_ids.append(d['driver_id'])
+            self.drivers.append((d['driver_id'], d['grid_id']))
         self.day_of_week = r['day_of_week']
 
 def parse_dispatch(dispatch_input: Dict[str, Any], h3_resolution: int) -> (Dict[str, Driver], Dict[str, Request], Dict[str, Set[DispatchCandidate]]):
@@ -66,3 +67,8 @@ def loc_to_grid(location: Tuple[float, float], h3_resolution: int) -> str:
     # Apparently we can't use libraries...
     # h3.geo_to_h3(location[1], location[0], h3_resolution)
     return f'{location[1]:0.2f},{location[0]:0.2f}'
+
+
+def get_neighbors(h3_grid_id, h3_resolution: int) -> List[str]:
+    #return list(h3.k_ring_distances(h3_grid_id, h3_resolution))
+    pass
