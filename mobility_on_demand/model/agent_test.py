@@ -3,7 +3,8 @@ import os
 import unittest
 from pprint import pformat
 
-from model.agent import Agent
+import utils
+from agent import Agent
 
 
 SAMPLE_DIR = os.path.abspath('../samples')
@@ -29,3 +30,9 @@ class AgentTest(unittest.TestCase):
             r = Agent().reposition(self.repo_observ)
             assert r
             print("Agent reposition action:\n{}".format(pformat(r)))
+
+
+class UtilsTest(unittest.TestCase):
+    def test_h3(self):
+        neighbors = utils.get_neighbors('8840e3cca9fffff')
+        assert len(neighbors) == 6

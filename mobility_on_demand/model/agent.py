@@ -6,8 +6,8 @@ import collections
 import os
 from typing import Dict, Set
 
-from model import utils
-from model.utils import DispatchCandidate, Request, RepositionData
+import utils
+from utils import DispatchCandidate, Request, RepositionData
 
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TODO')

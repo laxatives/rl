@@ -1,5 +1,4 @@
 import collections
-from h3 import h3
 from typing import Any, Dict, List, Set, Tuple
 
 # Apparently these aren't correct...
@@ -69,6 +68,8 @@ def loc_to_grid(location: Tuple[float, float], h3_resolution: int) -> str:
     return f'{location[1]:0.2f},{location[0]:0.2f}'
 
 
-def get_neighbors(h3_grid_id, h3_resolution: int) -> List[str]:
-    #return list(h3.k_ring_distances(h3_grid_id, h3_resolution))
+def get_neighbors(h3_grid_id) -> List[str]:
+    # Can't use libraries?
+    #return list(h3.k_ring_distances(h3_grid_id, 1))[1]
     pass
+
