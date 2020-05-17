@@ -30,5 +30,5 @@ class Agent:
         for driver_id, position_id in data.drivers:
             reposition.append(dict(driver_id=driver_id, destination=position_id))
 
-        # TODO: Brute-force expected reward, discounted by ETA
+        # TODO: Brute-force expected reward + update discounted by GAMMA^ETA
         return reposition
