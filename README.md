@@ -19,7 +19,22 @@ Although this is a toy-problem, Value Iteration forms the basis for many algorit
 
 
 ##  Example 3.5/3.8: Gridworld
-Algorithms in chapters 3-7 (Linear Programming, Dynamic Programming, Monte Carlo Prediction and Control On/Off Policy, Temporal Difference Prediction and Control On/Off Policy, N-Step TD)
+Solutions to the Gridworld example using algorithms described in chapters 3-7:
+
+- Linear Programming
+- Dynamic Programming
+- Monte Carlo 
+  - Prediction
+  - Control
+    - On Policy
+    - Off Policy
+- Temporal Difference
+  - Prediction
+  - Control 
+    - On Policy (SARSA)
+    - Off Policy (Q-Learning)
+    - Off Policy (Double Q Learning)
+- N-Step TD
 
 ![gridworld](images/qlearning.png)
 
