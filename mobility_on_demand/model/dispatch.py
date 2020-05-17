@@ -16,6 +16,10 @@ class Dispatcher:
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
         ...
 
+    @abstractmethod
+    def state_value(self, grid_id: str) -> int:
+        ...
+
 
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
@@ -67,6 +71,9 @@ class Sarsa(Dispatcher):
 
         return dispatch
 
+    def state_value(self, grid_id: str) -> int:
+        return self.state_values[grid_id]
+
 
 class Dql(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
@@ -85,8 +92,8 @@ class Dql(Dispatcher):
                 continue
 
             driver = drivers[candidate.driver_id]
-            v0 = self.values_left[driver.location] + self.values_right[driver.location]
-            v1 = self.values_left[request.end_loc] + self.values_right[request.end_loc]
+            v0 = self.state_value(driver.location)
+            v1 = self.state_value(request.end_loc)
             reward = request.reward
 
             # TODO: penalize cancellation rate
@@ -140,3 +147,6 @@ class Dql(Dispatcher):
                 v1 = values[driver.location]  # Driver hasn't moved if idle
                 values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
+
+    def state_value(self, grid_id: str) -> int:
+        return self.values_left[grid_id] + self.values_right[grid_id]

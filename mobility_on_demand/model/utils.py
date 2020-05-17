@@ -75,9 +75,8 @@ def loc_to_grid(location: Tuple[float, float]) -> str:
 def get_neighbors(h3_grid_id) -> List[str]:
     # Can't use libraries?
     #return list(h3.k_ring_distances(h3_grid_id, 1))[1]
-    r'([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)'
 
-    # This is fucking dumb
+    # This is also fucking dumb
     m = re.match(r'([0-9]+\.[0-9]+),([0-9]+\.[0-9]+)', h3_grid_id)
     lat, lng = float(m.group(1)), float(m.group(2))
     return [(lat, lng + 0.01), (lat, lng - 0.01), (lat + 0.01, lng), (lat - 0.01, lng)]
