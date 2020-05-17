@@ -66,7 +66,7 @@ class Sarsa(Dispatcher):
                 continue
             v0 = self.state_values[driver.location]
             # TODO: use idle transition probabilities
-            v1 = self.state_values[driver.location]  # Driver hasn't moved if idle
+            v1 = self.state_values[driver.location]  # Assume driver hasn't moved if idle
             self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
         return dispatch
@@ -144,7 +144,7 @@ class Dql(Dispatcher):
             values = random.choice((self.values_left, self.values_right))
             v0 = values[driver.location]
             # TODO: use idle transition probabilities
-            v1 = values[driver.location]  # Driver hasn't moved if idle
+            v1 = values[driver.location]  # Assume driver hasn't moved if idle
             values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
 
