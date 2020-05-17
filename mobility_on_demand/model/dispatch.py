@@ -27,6 +27,7 @@ class Sarsa(Dispatcher):
         assigned_driver_ids = set()  # type: Set[str]
         dispatch = dict()  # type: Dict[str, DispatchCandidate]
 
+        # TODO: Iterate over candidates instead of requests
         # Greedily match highest reward requests first
         for request in sorted(requests.values(), key=lambda x: x.reward, reverse=True):  # type: Request
             best_candidate: DispatchCandidate = None
@@ -62,7 +63,7 @@ class Sarsa(Dispatcher):
             v0 = self.state_values[driver.location]
             # TODO: use idle transition probabilities
             v1 = self.state_values[driver.location]  # Driver hasn't moved if idle
-            self.state_values[driver.location] += self.alpha + (self.idle_reward + self.gamma * v1 - v0)
+            self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
         return dispatch
 
@@ -101,6 +102,7 @@ class Dql(Dispatcher):
         assigned_driver_ids = set()  # type: Set[str]
         dispatch = dict()  # type: Dict[str, DispatchCandidate]
 
+        # TODO: Iterate over candidates instead of requests
         # Greedily match highest reward requests first
         for request in sorted(requests.values(), key=lambda x: x.reward, reverse=True):  # type: Request
             for candidate in sorted(candidates[request.request_id], key=lambda x: x.eta,
@@ -136,5 +138,5 @@ class Dql(Dispatcher):
                 v0 = values[driver.location]
                 # TODO: use idle transition probabilities
                 v1 = values[driver.location]  # Driver hasn't moved if idle
-                values[driver.location] += self.alpha + (self.idle_reward + self.gamma * v1 - v0)
+                values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
