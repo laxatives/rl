@@ -16,11 +16,11 @@ MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TODO')
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
 
-    def __init__(self, alpha=2/(5*60), gamma=0.9, h3_resolution=8, idle_cost=-2/(60*60)):
+    def __init__(self, alpha=2/(5*60), gamma=0.9, h3_resolution=8, idle_reward=-2/(60*60)):
         self.alpha = alpha
         self.gamma = gamma
         self.h3_resolution = h3_resolution
-        self.idle_cost = idle_cost
+        self.idle_reward = idle_reward
 
         self.state_values = collections.defaultdict(int)  # Expected reward for a driver in each geohash
         self.drivers = {}
@@ -29,7 +29,7 @@ class Agent:
 
     def dispatch(self, dispatch_input):
         """ Compute the assignment between drivers and passengers at each time step """
-        drivers, requests, candidates = utils.parse_dispatch(dispatch_input, self.h3_resolution)
+        drivers, requests, candidates = utils.parse_dispatch(dispatch_input)
         assigned_driver_ids = set()  # type: Set[str]
         dispatch = dict()  # type: Dict[str, DispatchCandidate]
 
@@ -61,14 +61,14 @@ class Agent:
                 driver = drivers[best_candidate.driver_id]
                 self.state_values[driver.location] += self.alpha * best_update
 
-        # Decay idle driver positions
+        # Reward (negative) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.state_values[driver.location]
             # TODO: use idle transition probabilities
             v1 = self.state_values[driver.location]  # Driver hasn't moved if idle
-            self.state_values[driver.location] += self.alpha + (self.idle_cost + self.gamma * v1 - v0)
+            self.state_values[driver.location] += self.alpha + (self.idle_reward + self.gamma * v1 - v0)
 
         self.drivers = drivers
         self.last_dispatch = dispatch
@@ -79,15 +79,24 @@ class Agent:
         reposition = []
         data = RepositionData(reposition_input)
 
-        driver_ids = {}
+        driver_ids = set()
         for driver_id, position_id in data.drivers:
             if driver_id not in self.drivers:
                 reposition.append(dict(driver_id=driver_id, destination=position_id))
             else:
-                #driver_ids.add(driver_id)
-                reposition.append(dict(driver_id=driver_id, destination=position_id))
+                driver_ids.add(driver_id)
 
         for driver_id in driver_ids:
-            pass
+            driver = self.drivers[driver_id]
+
+            # TODO: consider distant neighbors, penalize using gamma and movement speed
+            best_position, best_value = driver.location, self.state_values[driver.location]
+            for position in utils.get_neighbors(driver.location):
+                value = self.state_values[position]
+                if value > best_value:
+                    best_value, best_position = value, position
+            # TODO: need to map these back to Didi grid_id's
+            #reposition.append(dict(driver_id=driver_id, destination=best_position))
+            reposition.append(dict(driver_id=driver_id, destination=driver.location))
 
         return reposition
