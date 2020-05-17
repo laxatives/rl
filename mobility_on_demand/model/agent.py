@@ -7,7 +7,7 @@ import os
 from typing import Dict, Set
 
 import utils
-from utils import DispatchCandidate, Request, RepositionData
+from utils import DispatchCandidate, Driver, Request, RepositionData
 
 
 MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'TODO')
@@ -27,9 +27,7 @@ class Agent:
         self.last_dispatch = {}
         self.last_reposition = {}
 
-    def dispatch(self, dispatch_input):
-        """ Compute the assignment between drivers and passengers at each time step """
-        drivers, requests, candidates = utils.parse_dispatch(dispatch_input)
+    def _sarsa_dispatcher(self, drivers: Dict[str, Driver], requests: Dict[str, Request], candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
         assigned_driver_ids = set()  # type: Set[str]
         dispatch = dict()  # type: Dict[str, DispatchCandidate]
 
@@ -69,6 +67,13 @@ class Agent:
             # TODO: use idle transition probabilities
             v1 = self.state_values[driver.location]  # Driver hasn't moved if idle
             self.state_values[driver.location] += self.alpha + (self.idle_reward + self.gamma * v1 - v0)
+
+        return dispatch
+
+    def dispatch(self, dispatch_input):
+        """ Compute the assignment between drivers and passengers at each time step """
+        drivers, requests, candidates = utils.parse_dispatch(dispatch_input)
+        dispatch = self._sarsa_dispatcher(drivers, requests, candidates)
 
         self.drivers = drivers
         self.last_dispatch = dispatch
