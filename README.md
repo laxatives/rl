@@ -27,6 +27,6 @@ Algorithms in chapters 3-6 (Linear Programming, Dynamic Programming, Monte Carlo
 
 ## ACM SIGKDD CUP 2020: Learning to Dispatch and Reposition
 
-![kddcup](images/kddcup_05_16.gif)
+![kddcup](images/kddcup_05_16.png)
 
 Work in progress...
