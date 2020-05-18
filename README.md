@@ -35,9 +35,10 @@ Illustrated solutions to the Gridworld example using algorithms described in cha
   - Prediction
   - Control 
     - On Policy (SARSA)
+      - SARSA
+      - N-Step TD
     - Off Policy (Q-Learning)
     - Off Policy (Double Q Learning)
-- N-Step TD
 
 [nbviewer](https://nbviewer.jupyter.org/url/github.com/laxatives/rl/blob/master/gridworld_mdp.ipynb)
 
