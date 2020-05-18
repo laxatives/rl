@@ -26,6 +26,9 @@ class ScoredCandidate:
         self.candidate = candidate
         self.score = score
 
+    def __repr__(self):
+        return f'{self.candidate}|{self.score}'
+
 
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
@@ -33,7 +36,7 @@ class Sarsa(Dispatcher):
         self.state_values = collections.defaultdict(int)  # Expected reward for a driver in each geohash
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
-              candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
+                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
         ranking = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
@@ -45,7 +48,7 @@ class Sarsa(Dispatcher):
 
             # TODO: penalize cancellation rate
             # Best incremental improvement (get the ride AND improve driver position)
-            update = reward + self.gamma * v1 - v0
+            update = reward + self.gamma * v1 - v0 - 1e-4 * candidate.eta
             ranking.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
@@ -107,7 +110,8 @@ class Dql(Dispatcher):
             # Joint Ranking
             q0 = self.state_value(driver.location)
             q1 = self.state_value(request.end_loc)
-            joint_update = request.reward + self.gamma * q1 - q0
+            # TODO: penalize cancellation rate
+            joint_update = request.reward + self.gamma * q1 - q0 - 1e-4 * candidate.eta
             ranking.append(ScoredCandidate(candidate, joint_update))
 
         # Assign drivers

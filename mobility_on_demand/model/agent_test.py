@@ -1,7 +1,6 @@
 import json
 import os
 import unittest
-from pprint import pformat
 
 from agent import Agent
 
@@ -17,24 +16,9 @@ class AgentTest(unittest.TestCase):
             self.repo_observ = json.load(f)
 
 
-    def test_dispatch(self):
-        for _ in range(3):
-            d = Agent().dispatch(self.dispatch_observ)
-            assert d
-            print("Agent dispatch action:\n{}".format(pformat(d)))
-
-
-    def test_reposition(self):
+    def test_agent(self):
         for _ in range(3):
             d = Agent().dispatch(self.dispatch_observ)
             assert d
             r = Agent().reposition(self.repo_observ)
             assert r
-            print("Agent reposition action:\n{}".format(pformat(r)))
-
-
-class UtilsTest(unittest.TestCase):
-    def test_h3(self):
-        #neighbors = utils.get_neighbors('8840e3cca9fffff')
-        #assert len(neighbors) == 6
-        pass
