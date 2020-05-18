@@ -34,10 +34,12 @@ Illustrated solutions to the Gridworld example using algorithms described in cha
 - Temporal Difference
   - Prediction
   - Control 
-    - On Policy (SARSA)
-    - Off Policy (Q-Learning)
-    - Off Policy (Double Q Learning)
-- N-Step TD
+    - On Policy
+      - SARSA
+      - N-Step TD
+    - Off Policy
+      - Q Learning
+      - Double Q Learning
 
 [nbviewer](https://nbviewer.jupyter.org/url/github.com/laxatives/rl/blob/master/gridworld_mdp.ipynb)
 
