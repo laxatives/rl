@@ -11,7 +11,7 @@ from reposition import StateValueGreedy
 
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
-    def __init__(self, alpha=2/(5*60), gamma=0.9, idle_reward=-2/(60*60)):
+    def __init__(self, alpha=2/(5*60), gamma=0.99, idle_reward=-2/(60*60)):
         self.dispatcher = dispatcher.Sarsa(alpha, gamma, idle_reward)
         self.repositioner = StateValueGreedy(self.dispatcher, gamma)
 
