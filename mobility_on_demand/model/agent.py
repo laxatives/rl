@@ -6,14 +6,14 @@ from typing import List, Dict
 
 import dispatch as dispatcher
 import parse
-from reposition import StateValueGreedy
+import reposition
 
 
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
     def __init__(self, alpha=2/(5*60), gamma=0.99, idle_reward=-2/(60*60)):
         self.dispatcher = dispatcher.Sarsa(alpha, gamma, idle_reward)
-        self.repositioner = StateValueGreedy(self.dispatcher, gamma)
+        self.repositioner = reposition.StateValueGreedy(self.dispatcher, gamma)
 
 
     def dispatch(self, dispatch_input) -> List[Dict[str, str]]:
