@@ -2,7 +2,8 @@ from abc import abstractmethod
 from typing import Dict, List, Set
 
 from dispatch import Dispatcher
-from parser import HEX_GRID, RepositionData
+from parse import HEX_GRID, RepositionData
+
 
 SPEED = 6 # 3 m/s @ 2 second interval
 
@@ -31,8 +32,8 @@ class StateValueGreedy(Repositioner):
             value = self.dispatcher.state_value(grid_id)
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
-        max_candidates = (len(data.drivers) + 1) ** 2
-        candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
+        #max_candidates = (len(data.drivers) + 1) ** 2
+        #candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
 
         assigned_grid_ids = set()  # type: Set[str]
         for driver_id, current_grid_id in data.drivers:
