@@ -94,7 +94,7 @@ class Dql(Dispatcher):
         else:
             student, teacher = self.values_right, self.values_left
 
-        updates = dict()  # type: Dict[Tuple(str, str), ScoredCandidate]
+        updates = dict()  # type: Dict[Tuple[str, str], ScoredCandidate]
         ranking = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             # Teacher provides the value estimate

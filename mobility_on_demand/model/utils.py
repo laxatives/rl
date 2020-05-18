@@ -1,6 +1,5 @@
 import collections
-import re
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, Set, Tuple
 
 
 # Apparently these aren't correct...
