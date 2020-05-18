@@ -48,7 +48,7 @@ class Sarsa(Dispatcher):
 
             # TODO: penalize cancellation rate
             # Best incremental improvement (get the ride AND improve driver position)
-            update = reward + self.gamma * v1 - v0 - 1e-4 * candidate.eta
+            update = reward + self.gamma * v1 - v0 - 1e-12 * candidate.eta
             ranking.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
@@ -111,7 +111,7 @@ class Dql(Dispatcher):
             q0 = self.state_value(driver.location)
             q1 = self.state_value(request.end_loc)
             # TODO: penalize cancellation rate
-            joint_update = request.reward + self.gamma * q1 - q0 - 1e-4 * candidate.eta
+            joint_update = request.reward + self.gamma * q1 - q0 - 1e-12 * candidate.eta
             ranking.append(ScoredCandidate(candidate, joint_update))
 
         # Assign drivers
