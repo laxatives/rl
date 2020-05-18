@@ -3,7 +3,7 @@ import random
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
-from utils import DispatchCandidate, Driver, Request
+from parser import DispatchCandidate, Driver, Request
 
 class Dispatcher:
     def __init__(self, alpha, gamma, idle_reward):
@@ -14,6 +14,10 @@ class Dispatcher:
     @abstractmethod
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
+        ...
+
+    @abstractmethod
+    def get_grid_ids(self) -> List[str]:
         ...
 
     @abstractmethod
@@ -75,6 +79,9 @@ class Sarsa(Dispatcher):
             self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
         return dispatch
+
+    def get_grid_ids(self):
+        return set(self.state_values.keys())
 
     def state_value(self, grid_id: str) -> int:
         return self.state_values[grid_id]
@@ -140,6 +147,9 @@ class Dql(Dispatcher):
             v1 = teacher[driver.location]  # Assume driver hasn't moved if idle
             student[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
+
+    def get_grid_ids(self):
+        return set(self.values_left.keys()).union(set(self.values_right.keys()))
 
     def state_value(self, grid_id: str) -> int:
         return self.values_left[grid_id] + self.values_right[grid_id]
