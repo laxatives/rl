@@ -11,6 +11,7 @@ MEAN_CANCEL_RATES = [0.03493870431607338, 0.03866776293519174, 0.041760728528424
                      0.059208628863229744, 0.07455933064560377, 0.08571890195014424, 0.09848048263719175,
                      0.11230701971967454, 0.12717324794320947]
 EXPONENTIAL_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
+STEP_SECONDS = 2
 
 
 class Dispatcher:
@@ -59,7 +60,8 @@ class Sarsa(Dispatcher):
             expected_reward = completion_rate(candidate.distance) * request.reward
 
             # Best incremental improvement (get the ride AND improve driver position)
-            update = expected_reward + self.gamma * v1 - v0
+            time = (request.finish_ts - request.request_ts) / STEP_SECONDS
+            update = expected_reward + self.gamma ** time * v1 - v0
             if update > 0:
                 ranking.append(ScoredCandidate(candidate, update))
 
@@ -120,7 +122,8 @@ class Dql(Dispatcher):
             driver = drivers[candidate.driver_id]
             q0 = student[driver.location]
             expected_reward = completion_rate(candidate.distance) * request.reward
-            update = expected_reward + self.gamma * q1 - q0
+            time = (request.finish_ts - request.request_ts) / STEP_SECONDS
+            update = expected_reward + self.gamma ** time * q1 - q0
             updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
 
             # Joint Ranking
