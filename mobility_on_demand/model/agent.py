@@ -11,10 +11,10 @@ import reposition
 
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
-    def __init__(self, dql=True, alpha=2/(5*60), gamma=0.9999, idle_reward=0):
-        self.dispatcher = dispatcher.Dql(alpha, gamma, idle_reward) if dql \
-            else dispatcher.Sarsa(alpha, gamma, idle_reward)
-        self.repositioner = reposition.StateValueGreedy(self.dispatcher, gamma)
+    def __init__(self, d=False, a=2/(5*60), g=0.9999, ir=0):
+        self.dispatcher = dispatcher.Dql(a, g, ir) if d \
+            else dispatcher.Sarsa(a, g, ir)
+        self.repositioner = reposition.StateValueGreedy(self.dispatcher, g)
 
 
     def dispatch(self, dispatch_input) -> List[Dict[str, str]]:
