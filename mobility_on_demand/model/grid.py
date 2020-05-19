@@ -56,13 +56,18 @@ class Grid:
 
         return best_id
 
-    def distance(self, x: str, y: str) -> float:
+    def distance(self, x: str, y: str, fast=True) -> float:
         """ Return haversine distance in meters """
         if x not in self.coords or y not in self.coords:
             return 1e12
 
         lng_x, lat_x = self.coords[x]
         lng_y, lat_y = self.coords[y]
+
+        if fast:
+            lat_delta = abs(lat_x - lat_y)
+            lng_delta = LNG_FACTOR * abs(lng_x - lng_y)
+            return 111320 * (lat_delta ** 2 + lng_delta ** 2) ** 0.5
 
         # Haversine
         lng_x, lng_y, lat_x, lat_y = map(math.radians, [lng_x, lng_y, lat_x, lat_y])
