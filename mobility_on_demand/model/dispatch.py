@@ -52,9 +52,11 @@ class Sarsa(Dispatcher):
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
         # Rank candidates based on incremental driver value improvement
         ranking = []  # type: List[ScoredCandidate]
+        timestamp = 0
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
             driver = drivers[candidate.driver_id]
+            timestamp = max(int(request.request_ts), timestamp)
 
             v0 = self.state_values[driver.location]  # Value of the driver current position
             v1 = self.state_values[request.end_loc]  # Value of the proposed new position
@@ -87,7 +89,7 @@ class Sarsa(Dispatcher):
                 continue
             v0 = self.state_values[driver.location]
             v1 = 0
-            for destination, probability in HEX_GRID.idle_transitions(int(request.request_ts), driver.location).items():
+            for destination, probability in HEX_GRID.idle_transitions(timestamp, driver.location).items():
                 v1 += probability * self.state_values[destination]
             self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
@@ -117,10 +119,12 @@ class Dql(Dispatcher):
         # Rank candidates
         updates = dict()  # type: Dict[Tuple[str, str], ScoredCandidate]
         ranking = []  # type: List[ScoredCandidate]
+        timestamp = 0
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             # Teacher provides the destination position value
             request = requests[candidate.request_id]
             v1 = teacher[request.end_loc]
+            timestamp = max(int(request.request_ts), timestamp)
 
             # Compute student update
             driver = drivers[candidate.driver_id]
@@ -159,7 +163,7 @@ class Dql(Dispatcher):
                 continue
             v0 = student[driver.location]
             v1 = 0
-            for destination, probability in HEX_GRID.idle_transitions(int(request.request_ts), driver.location).items():
+            for destination, probability in HEX_GRID.idle_transitions(timestamp, driver.location).items():
                 v1 += probability * teacher[destination]
             student[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
