@@ -4,7 +4,7 @@ import random
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
-from parse import DispatchCandidate, Driver, Request
+from parse import DispatchCandidate, Driver, HEX_GRID, Request
 
 
 MEAN_CANCEL_RATES = [0.03493870431607338, 0.03866776293519174, 0.041760728528424544, 0.05007157148698522,
@@ -86,8 +86,9 @@ class Sarsa(Dispatcher):
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.state_values[driver.location]
-            # TODO: use idle transition probabilities
-            v1 = self.state_values[driver.location]  # Assume driver hasn't moved if idle
+            v1 = 0
+            for destination, probability in HEX_GRID.idle_transitions(int(request.request_ts), driver.location).items():
+                v1 += probability * self.state_values[destination]
             self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
         return dispatch
@@ -157,8 +158,9 @@ class Dql(Dispatcher):
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = student[driver.location]
-            # TODO: use idle transition probabilities
-            v1 = teacher[driver.location]  # Assume driver hasn't moved if idle
+            v1 = 0
+            for destination, probability in HEX_GRID.idle_transitions(int(request.request_ts), driver.location).items():
+                v1 += probability * teacher[destination]
             student[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
         return dispatch
 
