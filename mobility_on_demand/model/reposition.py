@@ -23,6 +23,9 @@ class ScoredCandidate:
         self.grid_id = grid_id
         self.score = score
 
+    def __repr__(self):
+        return f'{self.grid_id}|{self.score}'
+
 
 class StateValueGreedy(Repositioner):
     def reposition(self, data: RepositionData) -> List[Dict[str, str]]:
@@ -32,11 +35,11 @@ class StateValueGreedy(Repositioner):
             value = self.dispatcher.state_value(grid_id)
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
-        # Need to filter candidates for brute-force search
-        max_candidates = (5 * len(data.drivers)) ** 2
+        # Need to filter candidates for brute-force ranking
+        max_candidates = 10 * len(data.drivers)
         candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
 
-        # Greedily match ETA-discounted incremental gain
+        # Greedily rank ETA-discounted incremental gain
         assigned_grid_ids = set()  # type: Set[str]
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
@@ -46,10 +49,10 @@ class StateValueGreedy(Repositioner):
                 if grid_candidate.grid_id in assigned_grid_ids:
                     continue
 
-                eta = HEX_GRID.distance(current_grid_id, grid_id) / SPEED
-                incremental_value = self.gamma ** eta * self.dispatcher.state_value(grid_id) - current_value
+                eta = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
+                incremental_value = self.gamma ** eta * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
                 if incremental_value > best_value:
-                    best_grid_id, best_value = grid_id, incremental_value
+                    best_grid_id, best_value = grid_candidate.grid_id, incremental_value
 
             new_grid_id = best_grid_id if best_grid_id else current_grid_id
             assigned_grid_ids.add(new_grid_id)

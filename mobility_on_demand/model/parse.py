@@ -9,22 +9,22 @@ HEX_GRID = Grid()
 
 class Driver:
     def __init__(self, od):
-        self.driver_id = od['driver_id']
-        self.location = HEX_GRID.lookup(*od['driver_location'])
+        self.driver_id = od['driver_id']  # type: str
+        self.location = HEX_GRID.lookup(*od['driver_location'])  # type: str
 
     def __repr__(self):
         return f'Driver:{self.driver_id}@{self.location}'
 
 
 class Request:
-    def __init__(self, od):
-        self.request_id = od['order_id']
-        self.start_loc = HEX_GRID.lookup(*od['order_start_location'])
-        self.end_loc = HEX_GRID.lookup(*od['order_finish_location'])
-        self.request_ts = od['timestamp']
-        self.finish_ts = od['order_finish_timestamp']
-        self.day_of_week = od['day_of_week']
-        self.reward = od['reward_units']
+    def __init__(self, od: Dict[str, Any]):
+        self.request_id = od['order_id']  # type: str
+        self.start_loc = HEX_GRID.lookup(*od['order_start_location'])  # type: str
+        self.end_loc = HEX_GRID.lookup(*od['order_finish_location'])  # type: str
+        self.request_ts = od['timestamp']  # type: int
+        self.finish_ts = od['order_finish_timestamp']  # type: int
+        self.day_of_week = od['day_of_week']  # type: int
+        self.reward = od['reward_units']  # type: float
 
     def __repr__(self):
         return f'Request:{self.request_id},{self.start_loc}-{self.end_loc}:{self.reward}'
@@ -32,10 +32,10 @@ class Request:
 
 class DispatchCandidate:
     def __init__(self, od):
-        self.driver_id = od['driver_id']
-        self.request_id = od['order_id']
-        self.distance = od['order_driver_distance']
-        self.eta = od['pick_up_eta']
+        self.driver_id = od['driver_id']  # type: str
+        self.request_id = od['order_id']  # type: str
+        self.distance = od['order_driver_distance']  # type: float
+        self.eta = od['pick_up_eta']  # type: float
 
     def __repr__(self):
         return f'Candidate:{self.driver_id},{self.request_id}:{self.distance},{self.eta}'
@@ -43,17 +43,17 @@ class DispatchCandidate:
 
 class RepositionData:
     def __init__(self, r):
-        self.timestamp = r['timestamp']
+        self.timestamp = r['timestamp']  # type: int
         self.drivers = []
         for d in r['driver_info']:
             self.drivers.append((d['driver_id'], d['grid_id']))
-        self.day_of_week = r['day_of_week']
+        self.day_of_week = r['day_of_week']  # type: int
 
 
 def parse_dispatch(dispatch_input: Dict[str, Any]) -> (Dict[str, Driver], Dict[str, Request], Dict[str, Set[DispatchCandidate]]):
-    drivers = dict()
-    requests = dict()
-    candidates = collections.defaultdict(set)
+    drivers = dict()  # type: Dict[str, Driver]
+    requests = dict()  # type: Dict[str, Request]
+    candidates = collections.defaultdict(set)  # type: Dict[str, Set[DispatchCandidate]]
     for candidate in dispatch_input:
         driver = Driver(candidate)
         drivers[driver.driver_id] = driver

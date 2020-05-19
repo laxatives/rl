@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 
 LNG_FACTOR = 0.685  # Assume latitude ~30.6
 
+
 class Grid:
     def __init__(self):
         self.ids = []  # type: List[str]
@@ -47,7 +48,7 @@ class Grid:
 
 
     def lookup(self, lng: float, lat: float) -> str:
-        best_id, best_distance = None, 1000
+        best_id, best_distance = None, 1e12
         for grid_id, (grid_lng, grid_lat) in self.coords.items():
             dist = LNG_FACTOR * abs(lng - grid_lng) + abs(lat - grid_lat)
             if dist < best_distance:
@@ -57,6 +58,9 @@ class Grid:
 
     def distance(self, x: str, y: str) -> float:
         """ Return haversine distance in meters """
+        if x not in self.coords or y not in self.coords:
+            return 1e12
+
         lng_x, lat_x = self.coords[x]
         lng_y, lat_y = self.coords[y]
 

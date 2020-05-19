@@ -17,7 +17,7 @@ class AgentTest(unittest.TestCase):
 
 
     def test_agent(self):
-        for _ in range(10):
+        for _ in range(3):
             d = Agent().dispatch(self.dispatch_observ)
             assert d
             r = Agent().reposition(self.repo_observ)
