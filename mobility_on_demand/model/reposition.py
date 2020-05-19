@@ -33,7 +33,6 @@ class StateValueGreedy(Repositioner):
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
         # Need to filter candidates for brute-force search
-        # TODO: verify 3 -> 5 factor doesn't exceed timelimit
         max_candidates = (5 * len(data.drivers)) ** 2
         candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
 
