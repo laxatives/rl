@@ -137,7 +137,7 @@ class Dql(Dispatcher):
             # Joint Ranking for actual driver assignment
             v0 = self.state_value(driver.location)
             v1 = self.state_value(request.end_loc)
-            joint_update = expected_reward + self.gamma * v1 - v0
+            joint_update = expected_reward + self.gamma ** time * v1 - v0
             ranking.append(ScoredCandidate(candidate, joint_update))
 
         # Assign drivers
