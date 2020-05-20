@@ -4,8 +4,9 @@ from grid import Grid
 
 
 class GridTest(unittest.TestCase):
-    def setUp(self):
-        self.grid = Grid()
+    @classmethod
+    def setUpClass(cls):
+        cls.grid = Grid()
 
     def test_hex(self):
         grid_id = self.grid.lookup(104.50, 30.71)
@@ -34,7 +35,7 @@ class GridTest(unittest.TestCase):
         error = abs(distance - expected)
         assert error < 2000, distance
 
-    def test_distance_haverside(self):
+    def test_distance_haversine(self):
         # SE: (30.65924666666667, 104.12614), NW: (30.73054666666667, 104.04442)
         distance = self.grid.distance('386c78bc3c226d88', '926d27c14e84f5d0', fast=False)
         expected = 11126
