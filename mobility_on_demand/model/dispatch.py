@@ -64,7 +64,7 @@ class Sarsa(Dispatcher):
             time = (request.finish_ts - request.request_ts) / STEP_SECONDS
 
             # Best incremental improvement (get the ride AND improve driver position)
-            update = expected_reward + self.gamma ** time * v1 - v0
+            update = expected_reward + math.pow(self.gamma, time) * v1 - v0
             if update > 0:
                 ranking.append(ScoredCandidate(candidate, update))
 
@@ -139,13 +139,13 @@ class Dql(Dispatcher):
             v0 = student[driver.location]
             expected_reward = completion_rate(candidate.distance) * request.reward
             time = (request.finish_ts - request.request_ts) / STEP_SECONDS
-            update = expected_reward + self.gamma ** time * v1 - v0
+            update = expected_reward + math.pow(self.gamma, time) * v1 - v0
             updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
 
             # Joint Ranking for actual driver assignment
             v0 = self.state_value(driver.location)
             v1 = self.state_value(request.end_loc)
-            joint_update = expected_reward + self.gamma ** time * v1 - v0
+            joint_update = expected_reward + math.pow(self.gamma, time) * v1 - v0
             if joint_update > 0:
                 ranking.append(ScoredCandidate(candidate, joint_update))
 
