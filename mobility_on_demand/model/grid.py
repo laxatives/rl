@@ -46,7 +46,6 @@ class Grid:
                     start_dict[end_grid_id] = float(probability)
         assert len(self.transitions) == 24
 
-
     def lookup(self, lng: float, lat: float) -> str:
         best_id, best_distance = None, 1e12
         for grid_id, (grid_lng, grid_lat) in self.coords.items():

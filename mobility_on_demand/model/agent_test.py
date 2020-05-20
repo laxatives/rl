@@ -15,7 +15,6 @@ class AgentTest(unittest.TestCase):
         with open(os.path.join(SAMPLE_DIR, 'repo_observ'), 'r') as f:
             self.repo_observ = json.load(f)
 
-
     def test_agent(self):
         for _ in range(3):
             d = Agent().dispatch(self.dispatch_observ)
