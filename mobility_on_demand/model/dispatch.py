@@ -1,7 +1,6 @@
 import collections
 import math
 import random
-import time
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
@@ -29,15 +28,15 @@ class Dispatcher:
         ...
 
     @abstractmethod
-    def get_grid_ids(self) -> List[str]:
+    def get_grid_ids(self) -> Set[str]:
         ...
 
     @abstractmethod
-    def state_value(self, grid_id: str, timestamp: int) -> float:
+    def state_value(self, grid_id: str) -> float:
         ...
 
     @abstractmethod
-    def update_state_value(self, grid_id: str, timestamp: int, delta: float) -> None:
+    def update_state_value(self, grid_id: str, delta: float) -> None:
         ...
 
 
@@ -53,7 +52,7 @@ class ScoredCandidate:
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward, missed_request):
         super().__init__(alpha, gamma, idle_reward, missed_request)
-        self.state_values = collections.defaultdict(float)  # Expected reward for a driver in each (location, time)
+        self.state_values = collections.defaultdict(float)  # Expected gain from each driver in (location)
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -64,8 +63,8 @@ class Sarsa(Dispatcher):
             driver = drivers[candidate.driver_id]
             self.timestamp = max(request.request_ts, self.timestamp)
 
-            v0 = self.state_value(driver.location, request.request_ts)  # Value of the driver current position
-            v1 = self.state_value(request.end_loc, request.finish_ts)  # Value of the proposed new position
+            v0 = self.state_value(driver.location)  # Value of the driver current position
+            v1 = self.state_value(request.end_loc)  # Value of the proposed new position
             expected_reward = completion_rate(candidate.distance) * request.reward
             time_steps = (request.finish_ts - request.request_ts) / STEP_SECONDS
 
@@ -87,44 +86,40 @@ class Sarsa(Dispatcher):
 
             # Update value at driver location
             driver = drivers[candidate.driver_id]
-            self.update_state_value(driver.location, request.request_ts, self.alpha * scored.score)
+            self.update_state_value(driver.location, self.alpha * scored.score)
 
         # Reward (negative) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            v0 = self.state_value(driver.location, self.timestamp)
+            v0 = self.state_value(driver.location)
             v1 = 0
             for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-                v1 += probability * self.state_value(destination, self.timestamp + STEP_SECONDS)
+                v1 += probability * self.state_value(destination)
             update = self.idle_reward + self.gamma * v1 - v0
             if update < 0:
-                self.update_state_value(driver.location, self.timestamp + STEP_SECONDS, self.alpha * update)
+                self.update_state_value(driver.location, self.alpha * update)
 
         # Update value (positive) for open requests
         for request in requests.values():
             if request.request_id in dispatch:
                 continue
-            v0 = self.state_value(request.start_loc, request.request_ts)
-            v1 = self.state_value(request.end_loc, request.finish_ts)
+            v0 = self.state_value(request.start_loc)
+            v1 = self.state_value(request.end_loc)
             update = self.missed_request * (request.reward + self.gamma * v1 - v0)
             if update > 0:
-                self.update_state_value(request.start_loc, self.timestamp, self.alpha * update)
+                self.update_state_value(request.start_loc, self.alpha * update)
 
         return dispatch
 
-    def get_grid_ids(self):
-        return {grid_id for grid_id, _ in self.state_values.keys()}
+    def get_grid_ids(self) -> Set[str]:
+        return set(self.state_values.keys())
 
-    def state_value(self, grid_id: str, timestamp: int) -> float:
-        t = time.gmtime(timestamp)
-        hr_of_week = 24 * t.tm_wday + t.tm_hour
-        return self.state_values[(grid_id, hr_of_week)]
+    def state_value(self, grid_id: str) -> float:
+        return self.state_values[grid_id]
 
-    def update_state_value(self, grid_id: str, timestamp: int, delta: float) -> None:
-        t = time.gmtime(timestamp)
-        hr_of_week = 24 * t.tm_wday + t.tm_hour
-        self.state_values[(grid_id, hr_of_week)] += delta
+    def update_state_value(self, grid_id: str, delta: float) -> None:
+        self.state_values[grid_id] += delta
 
 
 class Dql(Dispatcher):
@@ -145,20 +140,20 @@ class Dql(Dispatcher):
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             # Teacher provides the destination position value
             request = requests[candidate.request_id]
-            v1 = Dql._get_value(self.teacher, request.end_loc, request.finish_ts)
+            v1 = Dql._get_value(self.teacher, request.end_loc)
             self.timestamp = max(request.request_ts, self.timestamp)
 
             # Compute student update
             driver = drivers[candidate.driver_id]
-            v0 = Dql._get_value(self.student, driver.location, request.request_ts)
+            v0 = Dql._get_value(self.student, driver.location)
             expected_reward = completion_rate(candidate.distance) * request.reward
             time_steps = (request.finish_ts - request.request_ts) / STEP_SECONDS
             update = expected_reward + math.pow(self.gamma, time_steps) * v1 - v0
             updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
 
             # Joint Ranking for actual driver assignment
-            v0 = self.state_value(driver.location, request.request_ts)
-            v1 = self.state_value(request.end_loc, request.finish_ts)
+            v0 = self.state_value(driver.location)
+            v1 = self.state_value(request.end_loc)
             joint_update = expected_reward + math.pow(self.gamma, time_steps) * v1 - v0
             if joint_update > 0:
                 ranking.append(ScoredCandidate(candidate, joint_update))
@@ -178,52 +173,44 @@ class Dql(Dispatcher):
 
             # Update student for selected candidate
             update = updates[(candidate.request_id, candidate.driver_id)].score
-            self.update_state_value(driver.location, self.timestamp, self.alpha * update)
+            self.update_state_value(driver.location, self.alpha * update)
 
         # Reward (negative) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            v0 = Dql._get_value(self.student, driver.location, self.timestamp)
+            v0 = Dql._get_value(self.student, driver.location)
             v1 = 0
             for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-                v1 += probability * Dql._get_value(self.teacher, destination, self.timestamp + STEP_SECONDS)
+                v1 += probability * Dql._get_value(self.teacher, destination)
             update = self.idle_reward + self.gamma * v1 - v0
             if update < 0:
-                self.update_state_value(driver.location, self.timestamp, self.alpha * update)
+                self.update_state_value(driver.location, self.alpha * update)
 
         # Update value (positive) for open requests
         for request in requests.values():
             if request.request_id in dispatch:
                 continue
-            v0 = Dql._get_value(self.student, request.start_loc, request.request_ts)
-            v1 = Dql._get_value(self.teacher, request.end_loc, request.finish_ts)
+            v0 = Dql._get_value(self.student, request.start_loc)
+            v1 = Dql._get_value(self.teacher, request.end_loc)
             update = self.missed_request * (request.reward + self.gamma * v1 - v0)
             if update > 0:
-                self.update_state_value(request.start_loc, request.request_ts, self.alpha * update)
+                self.update_state_value(request.start_loc, self.alpha * update)
 
         return dispatch
 
-    def get_grid_ids(self):
-        student_grid_ids = {grid_id for grid_id, _ in self.student.keys()}
-        teacher_grid_ids = {grid_id for grid_id, _ in self.teacher.keys()}
-        return student_grid_ids.union(teacher_grid_ids)
+    def get_grid_ids(self) -> Set[str]:
+        return set(self.student.keys()).union(set(self.teacher.keys()))
 
-    def state_value(self, grid_id: str, timestamp: int) -> float:
-        t = time.gmtime(timestamp)
-        hr_of_week = 24 * t.tm_wday + t.tm_hour
-        return self.student[(grid_id, hr_of_week)] + self.teacher[(grid_id, hr_of_week)]
+    def state_value(self, grid_id: str) -> float:
+        return self.student[grid_id] + self.teacher[grid_id]
 
     @staticmethod
-    def _get_value(state_value: Dict[Tuple[str, int], float], grid_id: str, timestamp: int) -> float:
-        t = time.gmtime(timestamp)
-        hr_of_week = 24 * t.tm_wday + t.tm_hour
-        return state_value[(grid_id, hr_of_week)]
+    def _get_value(state_value: Dict[str, float], grid_id: str) -> float:
+        return state_value[grid_id]
 
-    def update_state_value(self, grid_id: str, timestamp: int, delta: float) -> None:
-        t = time.gmtime(timestamp)
-        hr_of_week = 24 * t.tm_wday + t.tm_hour
-        self.student[(grid_id, hr_of_week)] += delta
+    def update_state_value(self, grid_id: str, delta: float) -> None:
+        self.student[grid_id] += delta
 
 def completion_rate(distance_meters: float) -> float:
     return 1 - max(min(EXPONENTIAL_FIT(distance_meters), 1), 0)
