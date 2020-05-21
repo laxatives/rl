@@ -33,7 +33,7 @@ class StateValueGreedy(Repositioner):
         # Rank candidates using Dispatcher state values
         candidate_grid_ids = []  # type: List[ScoredCandidate]
         for grid_id in self.dispatcher.get_grid_ids():
-            value = self.dispatcher.state_value(grid_id)
+            value = self.dispatcher.state_value(grid_id, self.dispatcher.timestamp)
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
         # Need to filter candidates for brute-force ranking
@@ -44,14 +44,15 @@ class StateValueGreedy(Repositioner):
         assigned_grid_ids = set()  # type: Set[str]
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
-            current_value = self.dispatcher.state_value(current_grid_id)
+            current_value = self.dispatcher.state_value(current_grid_id, self.dispatcher.timestamp)
             best_grid_id, best_value = None, 0  # don't move if negative gain
             for grid_candidate in candidate_grid_ids:
                 if grid_candidate.grid_id in assigned_grid_ids:
                     continue
 
                 eta = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
-                incremental_value = math.pow(self.gamma, eta) * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
+                future_ts = self.dispatcher.timestamp + eta
+                incremental_value = math.pow(self.gamma, eta) * self.dispatcher.state_value(grid_candidate.grid_id, future_ts) - current_value
                 if incremental_value > best_value:
                     best_grid_id, best_value = grid_candidate.grid_id, incremental_value
 
