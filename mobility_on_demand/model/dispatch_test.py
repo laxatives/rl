@@ -15,20 +15,21 @@ class DispatchTest(unittest.TestCase):
         cls.alpha = 2 / (5 * 60)
         cls.gamma = 0.9
         cls.idle_reward = -2 / (60 * 60)
+        cls.missed_request = 0.001
 
         with open(os.path.join(SAMPLE_DIR, 'dispatch_observ'), 'r') as f:
             cls.dispatch_observ = json.load(f)
 
     def test_sarsa(self):
         drivers, requests, candidates = parse.parse_dispatch(self.dispatch_observ)
-        dispatcher = dispatch.Sarsa(self.alpha, self.gamma, self.idle_reward)
+        dispatcher = dispatch.Sarsa(self.alpha, self.gamma, self.idle_reward, self.missed_request)
         for _ in range(3):
             d = dispatcher.dispatch(drivers, requests, candidates)
             assert d
 
     def test_dql(self):
         drivers, requests, candidates = parse.parse_dispatch(self.dispatch_observ)
-        dispatcher = dispatch.Dql(self.alpha, self.gamma, self.idle_reward)
+        dispatcher = dispatch.Dql(self.alpha, self.gamma, self.idle_reward, self.missed_request)
         for _ in range(3):
             d = dispatcher.dispatch(drivers, requests, candidates)
             assert d
