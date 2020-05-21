@@ -140,12 +140,12 @@ class Dql(Dispatcher):
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             # Teacher provides the destination position value
             request = requests[candidate.request_id]
-            v1 = Dql._get_value(self.teacher, request.end_loc)
+            v1 = self.teacher[request.end_loc]
             self.timestamp = max(request.request_ts, self.timestamp)
 
             # Compute student update
             driver = drivers[candidate.driver_id]
-            v0 = Dql._get_value(self.student, driver.location)
+            v0 = self.student[driver.location]
             expected_reward = completion_rate(candidate.distance) * request.reward
             time_steps = (request.finish_ts - request.request_ts) / STEP_SECONDS
             update = expected_reward + math.pow(self.gamma, time_steps) * v1 - v0
@@ -179,10 +179,10 @@ class Dql(Dispatcher):
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            v0 = Dql._get_value(self.student, driver.location)
+            v0 = self.student[driver.location]
             v1 = 0
             for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-                v1 += probability * Dql._get_value(self.teacher, destination)
+                v1 += probability * self.teacher[destination]
             update = self.idle_reward + self.gamma * v1 - v0
             if update < 0:
                 self.update_state_value(driver.location, self.alpha * update)
@@ -191,8 +191,8 @@ class Dql(Dispatcher):
         for request in requests.values():
             if request.request_id in dispatch:
                 continue
-            v0 = Dql._get_value(self.student, request.start_loc)
-            v1 = Dql._get_value(self.teacher, request.end_loc)
+            v0 = self.student[request.start_loc]
+            v1 = self.teacher[request.end_loc]
             update = self.missed_request * (request.reward + self.gamma * v1 - v0)
             if update > 0:
                 self.update_state_value(request.start_loc, self.alpha * update)
@@ -204,10 +204,6 @@ class Dql(Dispatcher):
 
     def state_value(self, grid_id: str) -> float:
         return self.student[grid_id] + self.teacher[grid_id]
-
-    @staticmethod
-    def _get_value(state_value: Dict[str, float], grid_id: str) -> float:
-        return state_value[grid_id]
 
     def update_state_value(self, grid_id: str, delta: float) -> None:
         self.student[grid_id] += delta
