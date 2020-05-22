@@ -1,4 +1,3 @@
-import math
 from abc import abstractmethod
 from typing import Dict, List, Set
 
@@ -51,7 +50,7 @@ class StateValueGreedy(Repositioner):
                     continue
 
                 eta = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
-                incremental_value = math.pow(self.gamma, eta) * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
+                incremental_value = self.gamma ** eta * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
                 if incremental_value > best_value:
                     best_grid_id, best_value = grid_candidate.grid_id, incremental_value
 

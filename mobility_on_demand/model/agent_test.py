@@ -11,12 +11,11 @@ SAMPLE_DIR = os.path.abspath('../samples')
 
 
 class AgentTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         with open(os.path.join(SAMPLE_DIR, 'dispatch_observ'), 'r') as f:
-            cls.dispatch_observ = json.load(f)
+            self.dispatch_observ = json.load(f)
         with open(os.path.join(SAMPLE_DIR, 'repo_observ'), 'r') as f:
-            cls.repo_observ = json.load(f)
+            self.repo_observ = json.load(f)
 
     def test_agent_init(self):
         agent = Agent()

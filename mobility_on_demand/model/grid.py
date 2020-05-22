@@ -67,13 +67,13 @@ class Grid:
         if fast:
             lat_delta = abs(lat_x - lat_y)
             lng_delta = LNG_FACTOR * abs(lng_x - lng_y)
-            return 111320 * math.pow(math.pow(lat_delta, 2) + math.pow(lng_delta, 2), 0.5)
+            return 111320 * (lat_delta ** 2 + lng_delta ** 2) ** 0.5
 
         # Haversine
         lng_x, lng_y, lat_x, lat_y = map(math.radians, [lng_x, lng_y, lat_x, lat_y])
         lng_delta, lat_delta = abs(lng_x - lng_y), abs(lat_x - lat_y)
-        a = math.pow(math.sin(lat_delta / 2), 2) + math.cos(lat_x) * math.cos(lat_y) * math.pow(math.sin(lng_delta / 2), 2)
-        return 6371000 * 2 * math.asin(math.sqrt(a))
+        a = math.sin(lat_delta / 2) ** 2 + math.cos(lat_x) * math.cos(lat_y) * math.sin(lng_delta / 2) ** 2
+        return 6371000 * 2 * math.asin(a ** 0.5)
 
     def idle_transitions(self, timestamp: int, start_grid_id: str) -> Dict[str, float]:
         hour = time.gmtime(timestamp).tm_hour
