@@ -68,6 +68,4 @@ class Grid:
 
     def idle_transitions(self, timestamp: int, start_grid_id: str) -> Dict[str, float]:
         hour = time.gmtime(timestamp).tm_hour
-        if hour in self.transitions and start_grid_id in self.transitions[hour]:
-            return self.transitions[hour][start_grid_id]
-        return {start_grid_id: 1.}
+        return self.transitions[hour][start_grid_id]
