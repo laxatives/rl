@@ -138,15 +138,14 @@ class Dql(Dispatcher):
             v0 = self.state_value(driver.location)
             v1 = self.state_value(request.end_loc)
             joint_update = expected_reward + self.gamma ** time * v1 - v0
-            if joint_update > 0:
-                ranking.append(ScoredCandidate(candidate, joint_update))
+            ranking.append(ScoredCandidate(candidate, joint_update))
 
         # Assign drivers
         assigned_driver_ids = set()  # type: Set[str]
         dispatch = dict()  # type: Dict[str, DispatchCandidate]
         for scored in sorted(ranking, key=lambda x: x.score, reverse=True):  # type: ScoredCandidate
             candidate = scored.candidate
-            if candidate.request_id in dispatch or candidate.driver_id in assigned_driver_ids:
+            if candidate.request_id in dispatch or candidate.driver_id in assigned_driver_ids or scored.score < 0:
                 continue
             assigned_driver_ids.add(candidate.driver_id)
 
