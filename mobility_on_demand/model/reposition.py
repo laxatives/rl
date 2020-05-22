@@ -58,5 +58,4 @@ class StateValueGreedy(Repositioner):
             new_grid_id = best_grid_id if best_grid_id else current_grid_id
             assigned_grid_ids.add(new_grid_id)
             reposition.append(dict(driver_id=driver_id, destination=new_grid_id))
-
         return reposition
