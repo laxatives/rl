@@ -34,8 +34,7 @@ class DispatchTest(unittest.TestCase):
             d = dispatcher.dispatch(drivers, requests, candidates)
             assert d
 
-    @staticmethod
-    def test_cancel_rate():
+    def test_cancel_rate(self):
         rate = dispatch.completion_rate(0)
         assert 0.97 < rate < 1.0, rate
         for i in range(10):
