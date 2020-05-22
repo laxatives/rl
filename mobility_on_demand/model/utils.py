@@ -1,15 +1,16 @@
 import collections
 from typing import Any, Dict, Set, Tuple
 
-from grid import Grid
 
-HEX_GRID = Grid()
+# Apparently these aren't correct...
+LAT_RANGE = (30.652828, 30.727818)
+LNG_RANGE = (104.042102, 104.129591)
 
 
 class Driver:
     def __init__(self, od):
         self.driver_id = od['driver_id']
-        self.location = HEX_GRID.lookup(*od['driver_location'])
+        self.location = loc_to_grid(od['driver_location'])
 
     def __repr__(self):
         return f'Driver:{self.driver_id}@{self.location}'
@@ -18,8 +19,8 @@ class Driver:
 class Request:
     def __init__(self, od):
         self.request_id = od['order_id']
-        self.start_loc = HEX_GRID.lookup(*od['order_start_location'])
-        self.end_loc = HEX_GRID.lookup(*od['order_finish_location'])
+        self.start_loc = loc_to_grid(od['order_start_location'])
+        self.end_loc = loc_to_grid(od['order_finish_location'])
         self.request_ts = od['timestamp']
         self.finish_ts = od['order_finish_timestamp']
         self.day_of_week = od['day_of_week']
@@ -48,7 +49,6 @@ class RepositionData:
             self.drivers.append((d['driver_id'], d['grid_id']))
         self.day_of_week = r['day_of_week']
 
-
 def parse_dispatch(dispatch_input: Dict[str, Any]) -> (Dict[str, Driver], Dict[str, Request], Dict[str, Set[DispatchCandidate]]):
     drivers = dict()
     requests = dict()
@@ -63,5 +63,9 @@ def parse_dispatch(dispatch_input: Dict[str, Any]) -> (Dict[str, Driver], Dict[s
 
 
 def loc_to_grid(location: Tuple[float, float]) -> str:
+    # TODO: Convert to Didi grid
+    # Apparently we can't use libraries...
+    #h3.geo_to_h3(location[1], location[0], h3_resolution)
+
     # This is actually not bad
     return f'{location[1]:0.2f},{location[0]:0.2f}'
