@@ -3,7 +3,7 @@ import random
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
-from utils import DispatchCandidate, Driver, Request
+from parse import DispatchCandidate, Driver, Request
 
 class Dispatcher:
     def __init__(self, alpha, gamma, idle_reward):
