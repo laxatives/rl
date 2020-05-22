@@ -15,11 +15,10 @@ STEP_SECONDS = 2
 
 
 class Dispatcher:
-    def __init__(self, alpha, gamma, idle_reward, open_request_reward):
+    def __init__(self, alpha, gamma, idle_reward):
         self.alpha = alpha
         self.gamma = gamma
         self.idle_reward = idle_reward
-        self.open_request_reward = open_request_reward
 
     @abstractmethod
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -45,8 +44,8 @@ class ScoredCandidate:
 
 
 class Sarsa(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward, open_request_reward):
-        super().__init__(alpha, gamma, idle_reward, open_request_reward)
+    def __init__(self, alpha, gamma, idle_reward):
+        super().__init__(alpha, gamma, idle_reward)
         self.state_values = collections.defaultdict(int)  # Expected reward for a driver in each geohash
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -94,14 +93,6 @@ class Sarsa(Dispatcher):
                 v1 += probability * self.state_values[destination]
             self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
-        # Update value (positive) for open requests
-        for request in requests.values():
-            if request.request_id in dispatch:
-                continue
-            v0 = self.state_values[request.start_loc]
-            v1 = self.state_values[request.end_loc]
-            self.state_values[request.start_loc] += self.alpha * (self.open_request_reward + self.gamma * v1 - v0)
-
         return dispatch
 
     def get_grid_ids(self):
@@ -112,8 +103,8 @@ class Sarsa(Dispatcher):
 
 
 class Dql(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward, open_request_reward):
-        super().__init__(alpha, gamma, idle_reward, open_request_reward)
+    def __init__(self, alpha, gamma, idle_reward):
+        super().__init__(alpha, gamma, idle_reward)
         self.values_left = collections.defaultdict(int)
         self.values_right = collections.defaultdict(int)
 
@@ -176,15 +167,6 @@ class Dql(Dispatcher):
             for destination, probability in HEX_GRID.idle_transitions(timestamp, driver.location).items():
                 v1 += probability * teacher[destination]
             student[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
-
-        # Update value (positive) for open requests
-        for request in requests.values():
-            if request.request_id in dispatch:
-                continue
-            v0 = student[request.start_loc]
-            v1 = teacher[request.end_loc]
-            student[request.start_loc] += self.alpha * (self.open_request_reward + self.gamma * v1 - v0)
-
         return dispatch
 
     def get_grid_ids(self):
