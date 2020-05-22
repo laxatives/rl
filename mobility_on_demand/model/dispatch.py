@@ -15,11 +15,10 @@ STEP_SECONDS = 2
 
 
 class Dispatcher:
-    def __init__(self, alpha, gamma, idle_reward, missed_request):
+    def __init__(self, alpha, gamma, idle_reward):
         self.alpha = alpha
         self.gamma = gamma
         self.idle_reward = idle_reward
-        self.missed_request = missed_request
 
     @abstractmethod
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -45,8 +44,8 @@ class ScoredCandidate:
 
 
 class Sarsa(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward, missed_request):
-        super().__init__(alpha, gamma, idle_reward, missed_request)
+    def __init__(self, alpha, gamma, idle_reward):
+        super().__init__(alpha, gamma, idle_reward)
         self.state_values = collections.defaultdict(float)  # Expected reward for a driver in each geohash
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -92,9 +91,7 @@ class Sarsa(Dispatcher):
             v1 = 0
             for destination, probability in HEX_GRID.idle_transitions(timestamp, driver.location).items():
                 v1 += probability * self.state_values[destination]
-            update = self.idle_reward + self.gamma * v1 - v0
-            if update < 0:
-                self.state_values[driver.location] += self.alpha * update
+            self.state_values[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
         # Update value (positive) for open requests
         for request in requests.values():
@@ -102,7 +99,8 @@ class Sarsa(Dispatcher):
                 continue
             v0 = self.state_values[request.start_loc]
             v1 = self.state_values[request.end_loc]
-            update = self.missed_request * (request.reward + self.gamma * v1 - v0)
+            # TODO: is this too aggressive?
+            update = request.reward + self.gamma * v1 - v0
             if update > 0:
                 self.state_values[request.start_loc] += self.alpha * update
 
@@ -116,8 +114,8 @@ class Sarsa(Dispatcher):
 
 
 class Dql(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward, missed_request):
-        super().__init__(alpha, gamma, idle_reward, missed_request)
+    def __init__(self, alpha, gamma, idle_reward):
+        super().__init__(alpha, gamma, idle_reward)
         self.values_left = collections.defaultdict(float)
         self.values_right = collections.defaultdict(float)
 
@@ -179,9 +177,7 @@ class Dql(Dispatcher):
             v1 = 0
             for destination, probability in HEX_GRID.idle_transitions(timestamp, driver.location).items():
                 v1 += probability * teacher[destination]
-            update = self.idle_reward + self.gamma * v1 - v0
-            if update < 0:
-                student[driver.location] += self.alpha * update
+            student[driver.location] += self.alpha * (self.idle_reward + self.gamma * v1 - v0)
 
         # Update value (positive) for open requests
         for request in requests.values():
@@ -189,7 +185,8 @@ class Dql(Dispatcher):
                 continue
             v0 = student[request.start_loc]
             v1 = teacher[request.end_loc]
-            update = self.missed_request * (request.reward + self.gamma * v1 - v0)
+            # TODO: is this too aggressive?
+            update = request.reward + self.gamma * v1 - v0
             if update > 0:
                 student[request.start_loc] += self.alpha * update
 
