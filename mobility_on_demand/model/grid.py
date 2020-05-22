@@ -64,7 +64,6 @@ class Grid:
         lng_x, lat_x = self.coords[x]
         lng_y, lat_y = self.coords[y]
 
-        # Manhattan
         if fast:
             lat_delta = abs(lat_x - lat_y)
             lng_delta = LNG_FACTOR * abs(lng_x - lng_y)
