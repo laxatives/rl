@@ -16,9 +16,8 @@ class AgentTest(unittest.TestCase):
         with open(os.path.join(SAMPLE_DIR, 'repo_observ'), 'r') as f:
             cls.repo_observ = json.load(f)
 
-    def test_agent(self):
+    def test_agent_init(self):
         agent = Agent()
-
         for _ in range(3):
             d = agent.dispatch(self.dispatch_observ)
             assert d
