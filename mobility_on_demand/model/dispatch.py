@@ -7,10 +7,10 @@ from typing import Dict, List, Set, Tuple
 from parse import DispatchCandidate, Driver, HEX_GRID, Request
 
 
-EXPONENTIAL_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
 MEAN_CANCEL_RATES = [0.03493870431607338, 0.03866776293519174, 0.041760728528424544, 0.05007157148698522,
                      0.059208628863229744, 0.07455933064560377, 0.08571890195014424, 0.09848048263719175,
                      0.11230701971967454, 0.12717324794320947]
+EXPONENTIAL_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
 STEP_SECONDS = 2
 
 
@@ -56,7 +56,7 @@ class Sarsa(Dispatcher):
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
             driver = drivers[candidate.driver_id]
-            timestamp = max(request.request_ts, timestamp)
+            timestamp = max(int(request.request_ts), timestamp)
 
             v0 = self.state_values[driver.location]  # Value of the driver current position
             v1 = self.state_values[request.end_loc]  # Value of the proposed new position
@@ -124,7 +124,7 @@ class Dql(Dispatcher):
             # Teacher provides the destination position value
             request = requests[candidate.request_id]
             v1 = teacher[request.end_loc]
-            timestamp = max(request.request_ts, timestamp)
+            timestamp = max(int(request.request_ts), timestamp)
 
             # Compute student update
             driver = drivers[candidate.driver_id]
