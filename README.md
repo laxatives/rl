@@ -1,5 +1,5 @@
 # Reinforcement Learning
-Implementations to problems described in Sutton & Barto
+Illustrated examples from Sutton & Barto
 
 ## Sutton & Barto Exercise 5.12: Racetrack
 
@@ -47,6 +47,6 @@ Illustrated solutions to the Gridworld example using algorithms described in cha
 
 ## ACM SIGKDD CUP 2020: Learning to Dispatch and Reposition
 
-![kddcup](images/kddcup_05_16.png)
+![kddcup](images/kddcup_05_17.png)
 
 Work in progress...
