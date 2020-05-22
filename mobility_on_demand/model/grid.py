@@ -1,7 +1,6 @@
 import csv
 import math
 import os
-import time
 from typing import Dict, List, Tuple
 
 
@@ -11,7 +10,6 @@ class Grid:
     def __init__(self):
         self.ids = []  # type: List[str]
         self.coords = dict()  # type: Dict[str, Tuple[float, float]]
-        self.transitions = dict()  # type: Dict[int, Dict[start_grid_id, Dict[str, float]]
 
         grid_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hexagon_grid_table.csv')
         with open(grid_path, 'r') as csvfile:
@@ -25,25 +23,6 @@ class Grid:
                 lng = sum([float(row[i]) for i in range(1, 13, 2)]) / 6
                 lat = sum([float(row[i]) for i in range(2, 13, 2)]) / 6
                 self.coords[grid_id] = (lng, lat)
-        assert len(self.coords) == 8518
-
-        transitions_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'idle_transition_probability.csv')
-        with open(transitions_path, 'r') as csvfile:
-            for row in csv.reader(csvfile):
-                # TODO: verify hour in GMT
-                hour, start_grid_id, end_grid_id, probability = row
-                hour = int(hour)
-                if hour not in self.transitions:
-                    self.transitions[hour] = dict()
-
-                hour_dict = self.transitions[hour]
-                if start_grid_id not in hour_dict:
-                    hour_dict[start_grid_id] = dict()
-
-                start_dict = hour_dict[start_grid_id]
-                if end_grid_id not in start_dict:
-                    start_dict[end_grid_id] = float(probability)
-        assert len(self.transitions) == 24
 
 
     def lookup(self, lng: float, lat: float) -> str:
@@ -66,6 +45,4 @@ class Grid:
         a = math.sin(lat_delta / 2) ** 2 + math.cos(lat_x) * math.cos(lat_y) * math.sin(lng_delta / 2) ** 2
         return 6371000 * 2 * math.asin(a ** 0.5)
 
-    def idle_transitions(self, timestamp: int, start_grid_id: str) -> Dict[str, float]:
-        hour = time.gmtime(timestamp).tm_hour
-        return self.transitions[hour][start_grid_id]
+    # TODO: idle transition probabilities
