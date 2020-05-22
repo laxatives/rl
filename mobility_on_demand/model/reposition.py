@@ -40,7 +40,7 @@ class StateValueGreedy(Repositioner):
         max_candidates = 10 * len(data.drivers)
         candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
 
-        # Rank ETA-discounted incremental gain
+        # Greedily rank ETA-discounted incremental gain
         assigned_grid_ids = set()  # type: Set[str]
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
