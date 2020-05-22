@@ -35,7 +35,7 @@ class Dispatcher:
 
 
 class ScoredCandidate:
-    def __init__(self, candidate: DispatchCandidate, score: float):
+    def __init__(self, candidate: DispatchCandidate, score: int):
         self.candidate = candidate
         self.score = score
 
