@@ -164,4 +164,4 @@ class Dql(Dispatcher):
 
 
 def completion_rate(distance_meters: float) -> float:
-    return 1 - max(min(EXPONENTIAL_FIT(distance_meters), 1), 0)
+    return max(min(EXPONENTIAL_FIT(distance_meters), 1), 0)
