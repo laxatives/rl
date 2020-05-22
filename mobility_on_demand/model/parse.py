@@ -49,6 +49,7 @@ class RepositionData:
             self.drivers.append((d['driver_id'], d['grid_id']))
         self.day_of_week = r['day_of_week']  # type: int
 
+
 def parse_dispatch(dispatch_input: List[Dict[str, Any]]) -> (Dict[str, Driver], Dict[str, Request], Dict[str, Set[DispatchCandidate]]):
     drivers = dict()  # type: Dict[str, Driver]
     requests = dict()  # type: Dict[str, Request]
