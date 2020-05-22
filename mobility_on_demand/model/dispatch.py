@@ -8,9 +8,6 @@ from parse import DispatchCandidate, Driver, Request
 
 
 EXPONENTIAL_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
-MEAN_CANCEL_RATES = [0.03493870431607338, 0.03866776293519174, 0.041760728528424544, 0.05007157148698522,
-                     0.059208628863229744, 0.07455933064560377, 0.08571890195014424, 0.09848048263719175,
-                     0.11230701971967454, 0.12717324794320947]
 STEP_SECONDS = 2
 
 
@@ -36,6 +33,7 @@ class Dispatcher:
     @abstractmethod
     def update_state_value(self, grid_id: str, delta: float) -> None:
         ...
+
 
 class ScoredCandidate:
     def __init__(self, candidate: DispatchCandidate, score: float):
@@ -189,6 +187,7 @@ class Dql(Dispatcher):
 
     def update_state_value(self, grid_id: str, delta: float) -> None:
         self.student[grid_id] += delta
+
 
 def completion_rate(distance_meters: float) -> float:
     return 1 - max(min(EXPONENTIAL_FIT(distance_meters), 1), 0)
