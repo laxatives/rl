@@ -3,7 +3,6 @@ from typing import Any, Dict, Set, Tuple
 
 from grid import Grid
 
-
 HEX_GRID = Grid()
 
 

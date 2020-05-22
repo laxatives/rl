@@ -10,7 +10,7 @@ class Grid:
         self.coords = dict()  # type: Dict[str, Tuple[float, float]]
         coords_list = []
 
-        grid_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hexagon_grid_table.csv')
+        grid_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/hexagon_grid_table.csv')
         with open(grid_path, 'r') as csvfile:
             for row in csv.reader(csvfile):
                 if len(row) != 13:
