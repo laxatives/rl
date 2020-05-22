@@ -99,7 +99,6 @@ class Sarsa(Dispatcher):
                 continue
             v0 = self.state_values[request.start_loc]
             v1 = self.state_values[request.end_loc]
-            # TODO: is this too aggressive?
             self.state_values[request.start_loc] += self.alpha * (request.reward + self.gamma * v1 - v0)
 
         return dispatch
@@ -183,7 +182,6 @@ class Dql(Dispatcher):
                 continue
             v0 = student[request.start_loc]
             v1 = teacher[request.end_loc]
-            # TODO: is this too aggressive?
             student[request.start_loc] += self.alpha * (request.reward + self.gamma * v1 - v0)
 
         return dispatch
