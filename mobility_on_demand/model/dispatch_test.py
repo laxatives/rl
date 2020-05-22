@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 
-import parser
+import utils
 from dispatch import Sarsa
 
 SAMPLE_DIR = os.path.abspath('../samples')
@@ -18,14 +18,14 @@ class DispatchTest(unittest.TestCase):
             self.dispatch_observ = json.load(f)
 
     def test_sarsa(self):
-        drivers, requests, candidates = parser.parse_dispatch(self.dispatch_observ)
+        drivers, requests, candidates = utils.parse_dispatch(self.dispatch_observ)
         dispatcher = Sarsa(self.alpha, self.gamma, self.idle_reward)
         for _ in range(3):
             d = dispatcher.dispatch(drivers, requests, candidates)
             assert d
 
     def test_dql(self):
-        drivers, requests, candidates = parser.parse_dispatch(self.dispatch_observ)
+        drivers, requests, candidates = utils.parse_dispatch(self.dispatch_observ)
         dispatcher = Sarsa(self.alpha, self.gamma, self.idle_reward)
         for _ in range(3):
             d = dispatcher.dispatch(drivers, requests, candidates)
