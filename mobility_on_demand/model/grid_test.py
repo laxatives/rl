@@ -33,9 +33,3 @@ class GridTest(unittest.TestCase):
         expected = 7333
         error = abs(distance - expected)
         assert error < 100, distance
-
-    def test_idle_transition(self):
-        transitions = self.grid.idle_transitions(148865000, '79365a623250931c')
-        assert abs(transitions['d5798236d9cf3f65'] - 0.043478260869565216) < 1e-9, transitions['d5798236d9cf3f65']
-        assert abs(transitions['45b05a52ebc86721'] - 0.043478260869565216) < 1e-9, transitions['45b05a52ebc86721']
-        assert abs(sum(transitions.values()) - 1.0) < 1e-9
