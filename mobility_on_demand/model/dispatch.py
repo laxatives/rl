@@ -97,7 +97,8 @@ class Sarsa(Dispatcher):
             for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
                 v1 += probability * self.state_value(destination)
             update = self.idle_reward + self.gamma * v1 - v0
-            self.update_state_value(driver.location, self.alpha * update)
+            if update < 0:
+                self.update_state_value(driver.location, self.alpha * update)
 
         # Update value (positive) for open requests
         for request in requests.values():
@@ -106,7 +107,8 @@ class Sarsa(Dispatcher):
             v0 = self.state_value(request.start_loc)
             v1 = self.state_value(request.end_loc)
             update = self.missed_request * (request.reward + self.gamma * v1 - v0)
-            self.update_state_value(request.start_loc, self.alpha * update)
+            if update > 0:
+                self.update_state_value(request.start_loc, self.alpha * update)
 
         return dispatch
 
@@ -182,7 +184,8 @@ class Dql(Dispatcher):
             for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
                 v1 += probability * self.teacher[destination]
             update = self.idle_reward + self.gamma * v1 - v0
-            self.update_state_value(driver.location, self.alpha * update)
+            if update < 0:
+                self.update_state_value(driver.location, self.alpha * update)
 
         # Update value (positive) for open requests
         for request in requests.values():
@@ -191,7 +194,8 @@ class Dql(Dispatcher):
             v0 = self.student[request.start_loc]
             v1 = self.teacher[request.end_loc]
             update = self.missed_request * (request.reward + self.gamma * v1 - v0)
-            self.update_state_value(request.start_loc, self.alpha * update)
+            if update > 0:
+                self.update_state_value(request.start_loc, self.alpha * update)
 
         return dispatch
 
