@@ -47,7 +47,7 @@ class ScoredCandidate:
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.state_values = collections.defaultdict(float)  # Expected gain from each driver in (location)
+        self.state_values = {grid_id: 0 for grid_id in HEX_GRID.coords.keys()}  # Expected gain from each driver in (location)
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -106,8 +106,8 @@ class Sarsa(Dispatcher):
 class Dql(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.student = collections.defaultdict(float)
-        self.teacher = collections.defaultdict(float)
+        self.student = {grid_id: 0 for grid_id in HEX_GRID.coords.keys()}
+        self.teacher = {grid_id: 0 for grid_id in HEX_GRID.coords.keys()}
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
