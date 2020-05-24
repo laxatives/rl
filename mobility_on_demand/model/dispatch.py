@@ -4,7 +4,7 @@ import random
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
-from parse import DispatchCandidate, Driver, Request
+from parse import DispatchCandidate, Driver, HEX_GRID, Request
 
 
 EXPONENTIAL_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
@@ -86,7 +86,7 @@ class Sarsa(Dispatcher):
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.state_value(driver.location)
-            # TODO: use idle transition probabilities
+            # TODO: idle transition probabilities Expected SARSA
             v1 = self.state_value(driver.location)  # Assume driver hasn't moved if idle
             update = self.idle_reward + self.gamma * v1 - v0
             self.update_state_value(driver.location, self.alpha * update)
@@ -108,6 +108,7 @@ class Dql(Dispatcher):
         super().__init__(alpha, gamma, idle_reward)
         self.student = collections.defaultdict(float)
         self.teacher = collections.defaultdict(float)
+        self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -122,6 +123,7 @@ class Dql(Dispatcher):
             # Teacher provides the destination position value
             request = requests[candidate.request_id]
             v1 = self.teacher[request.end_loc]
+            self.timestamp = max(request.request_ts, self.timestamp)
 
             # Compute student update
             driver = drivers[candidate.driver_id]
@@ -132,11 +134,9 @@ class Dql(Dispatcher):
             updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
 
             # Joint Ranking for actual driver assignment
-            v0 = self.state_value(driver.location)
             v1 = self.state_value(request.end_loc)
-            joint_update = expected_reward + math.pow(self.gamma, time_steps) * v1 - v0
-            if joint_update > 0:
-                ranking.append(ScoredCandidate(candidate, joint_update))
+            expected_gain = expected_reward + math.pow(self.gamma, time_steps) * v1
+            ranking.append(ScoredCandidate(candidate, expected_gain))
 
         # Assign drivers
         assigned_driver_ids = set()  # type: Set[str]
@@ -152,18 +152,19 @@ class Dql(Dispatcher):
             dispatch[request.request_id] = candidate
 
             # Update student for selected candidate
-            update = updates[(candidate.request_id, candidate.driver_id)].score
-            self.update_state_value(driver.location, self.alpha * update)
+            v0 = self.state_value(driver.location)
+            gain = updates[(candidate.request_id, candidate.driver_id)].score
+            self.update_state_value(driver.location, self.alpha * (gain - v0))
 
         # Reward (negative) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.student[driver.location]
-            # TODO: grid ablation study
-            v1 = self.teacher[driver.location]
-            #for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-            #    v1 += probability * self.teacher[destination]
+            # Expected Sarsa
+            v1 = 0
+            for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
+                v1 += probability * self.teacher[destination]
             update = self.idle_reward + self.gamma * v1 - v0
             self.update_state_value(driver.location, self.alpha * update)
 
