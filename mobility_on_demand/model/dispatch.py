@@ -7,7 +7,7 @@ from typing import Dict, List, Set, Tuple
 from parse import DispatchCandidate, Driver, HEX_GRID, Request
 
 
-EXPONENTIAL_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
+CANCEL_DISTANCE_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
 STEP_SECONDS = 2
 
 
@@ -47,7 +47,7 @@ class ScoredCandidate:
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.state_values = {grid_id: 0 for grid_id in HEX_GRID.coords.keys()}  # Expected gain from each driver in (location)
+        self.state_values = collections.defaultdict(int)  # Expected gain from each driver in (location)
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -106,8 +106,8 @@ class Sarsa(Dispatcher):
 class Dql(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.student = {grid_id: 0 for grid_id in HEX_GRID.coords.keys()}
-        self.teacher = {grid_id: 0 for grid_id in HEX_GRID.coords.keys()}
+        self.student = collections.defaultdict(int)
+        self.teacher = collections.defaultdict(int)
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -191,4 +191,4 @@ class Dql(Dispatcher):
 
 
 def completion_rate(distance_meters: float) -> float:
-    return 1 - max(min(EXPONENTIAL_FIT(distance_meters), 1), 0)
+    return 1 - max(min(CANCEL_DISTANCE_FIT(distance_meters), 1), 0)
