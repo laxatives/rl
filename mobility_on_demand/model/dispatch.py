@@ -75,7 +75,9 @@ class Sarsa(Dispatcher):
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                update = expected_reward + self.gamma * v1 - v0
+                time_steps = (request.finish_ts - request.request_ts) / STEP_SECONDS
+                discount = math.pow(self.gamma, time_steps)
+                update = expected_reward + discount * v1 - v0
                 ranking.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
