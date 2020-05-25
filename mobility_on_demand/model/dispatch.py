@@ -59,11 +59,10 @@ class Sarsa(Dispatcher):
 
             v0 = self.state_value(driver.location)  # Value of the driver current position
             v1 = self.state_value(request.end_loc)  # Value of the proposed new position
-            reward = request.reward
+            expected_reward = completion_rate(candidate.distance) * request.reward
 
-            # TODO: penalize cancellation rate
             # Best incremental improvement (get the ride AND improve driver position)
-            update = reward + self.gamma * v1 - v0 - 1e-12 * candidate.eta
+            update = expected_reward + self.gamma * v1 - v0
             ranking.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
