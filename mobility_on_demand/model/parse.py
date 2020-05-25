@@ -65,5 +65,5 @@ def parse_dispatch(dispatch_input: List[Dict[str, Any]]) -> (Dict[str, Driver], 
 
 def loc_to_grid(location: Tuple[float, float]) -> str:
     # This is actually not bad
-    return f'{location[1]:0.2f},{location[0]:0.2f}'
-    #return HEX_GRID.lookup(location[0], location[1])
+    #return f'{location[1]:0.2f},{location[0]:0.2f}'
+    return HEX_GRID.lookup(location[0], location[1])
