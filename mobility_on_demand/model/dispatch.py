@@ -1,5 +1,7 @@
 import collections
+import csv
 import math
+import os
 import random
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
@@ -16,6 +18,16 @@ class Dispatcher:
         self.alpha = alpha
         self.gamma = gamma
         self.idle_reward = idle_reward
+
+    @staticmethod
+    def _init_state_values() -> Dict[str, float]:
+        state_values = collections.defaultdict(float)
+        value_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'init_values.csv')
+        with open(value_path, 'r') as csvfile:
+            for row in csv.reader(csvfile):
+                grid_id, value = row
+                state_values[grid_id] = float(value)
+        return state_values
 
     @abstractmethod
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -47,7 +59,8 @@ class ScoredCandidate:
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.state_values = collections.defaultdict(float)  # Expected gain from each driver in (location)
+        # Expected gain from each driver in (location)
+        self.state_values = Dispatcher._init_state_values()
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -105,8 +118,8 @@ class Sarsa(Dispatcher):
 class Dql(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.student = collections.defaultdict(float)
-        self.teacher = collections.defaultdict(float)
+        self.student = Dispatcher._init_state_values()
+        self.teacher = Dispatcher._init_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
