@@ -141,13 +141,12 @@ class Dql(Dispatcher):
             driver = drivers[candidate.driver_id]
             v0 = self.student[driver.location]
             expected_reward = completion_rate(candidate.distance) * request.reward
-            time_steps = (request.finish_ts - request.request_ts) / STEP_SECONDS
-            update = expected_reward + math.pow(self.gamma, time_steps) * v1 - v0
+            update = expected_reward + self.gamma * v1 - v0
             updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
 
             # Joint Ranking for actual driver assignment
             v1 = self.state_value(request.end_loc)
-            expected_gain = expected_reward + math.pow(self.gamma, time_steps) * v1
+            expected_gain = expected_reward + self.gamma * v1
             ranking.append(ScoredCandidate(candidate, expected_gain))
 
         # Assign drivers
