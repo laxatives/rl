@@ -120,7 +120,6 @@ class Dql(Dispatcher):
         super().__init__(alpha, gamma, idle_reward)
         self.student = Dispatcher._init_state_values()
         self.teacher = Dispatcher._init_state_values()
-        self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -135,7 +134,6 @@ class Dql(Dispatcher):
             # Teacher provides the destination position value
             request = requests[candidate.request_id]
             v1 = self.teacher[request.end_loc]
-            self.timestamp = max(request.request_ts, self.timestamp)
 
             # Compute student update
             driver = drivers[candidate.driver_id]
