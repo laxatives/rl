@@ -40,17 +40,19 @@ class StateValueGreedy(Repositioner):
         max_candidates = 10 * len(data.drivers)
         candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
 
-        # Rank discounted incremental gain (ETA is too unreliable)
+        # Rank discounted incremental gain
         assigned_grid_ids = set()  # type: Set[str]
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
             current_value = self.dispatcher.state_value(current_grid_id)
-            best_grid_id, best_value = None, 0  # don't move if negative gain
+            best_grid_id, best_value = None, 0  # don't move for lower gain
             for grid_candidate in candidate_grid_ids:
                 if grid_candidate.grid_id in assigned_grid_ids:
                     continue
 
-                incremental_value = self.gamma * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
+                time = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
+                discount = math.pow(self.gamma, time)
+                incremental_value = discount * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
                 if incremental_value > best_value:
                     best_grid_id, best_value = grid_candidate.grid_id, incremental_value
 
