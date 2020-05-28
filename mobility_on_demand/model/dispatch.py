@@ -100,10 +100,10 @@ class Sarsa(Dispatcher):
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.state_value(driver.location)
-            # Expected SARSA
-            v1 = 0
-            for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-                v1 += probability * self.state_value(destination)
+            # TODO: Expected SARSA
+            v1 = self.state_value(driver.location)
+            #for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
+            #    v1 += probability * self.state_value(destination)
             update = self.idle_reward + self.gamma * v1 - v0
             self.update_state_value(driver.location, self.alpha * update)
 
