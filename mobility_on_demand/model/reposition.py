@@ -36,10 +36,6 @@ class StateValueGreedy(Repositioner):
             value = self.dispatcher.state_value(grid_id)
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
-        # Need to filter candidates for brute-force ranking
-        #max_candidates = 10 * len(data.drivers)
-        #candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
-
         # Rank discounted incremental gain
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
