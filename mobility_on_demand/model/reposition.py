@@ -44,14 +44,12 @@ class StateValueGreedy(Repositioner):
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
             current_value = self.dispatcher.state_value(current_grid_id)
-            best_grid_id, best_value = None, 0  # don't move for lower gain
+            best_grid_id, best_value = current_grid_id, 0  # don't move for lower gain
             for grid_candidate in candidate_grid_ids:
                 time = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
                 discount = math.pow(self.gamma, time)
                 incremental_value = discount * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
                 if incremental_value > best_value:
                     best_grid_id, best_value = grid_candidate.grid_id, incremental_value
-
-            new_grid_id = best_grid_id if best_grid_id else current_grid_id
-            reposition.append(dict(driver_id=driver_id, destination=new_grid_id))
+            reposition.append(dict(driver_id=driver_id, destination=best_grid_id))
         return reposition
