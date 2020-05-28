@@ -61,6 +61,7 @@ class Sarsa(Dispatcher):
         super().__init__(alpha, gamma, idle_reward)
         # Expected gain from each driver in (location)
         self.state_values = Dispatcher._init_state_values()
+        self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -69,6 +70,7 @@ class Sarsa(Dispatcher):
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
             driver = drivers[candidate.driver_id]
+            self.timestamp = max(request.request_ts, self.timestamp)
 
             v0 = self.state_value(driver.location)  # Value of the driver current position
             v1 = self.state_value(request.end_loc)  # Value of the proposed new position
@@ -98,8 +100,10 @@ class Sarsa(Dispatcher):
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.state_value(driver.location)
-            # TODO: idle transition probabilities Expected SARSA
-            v1 = self.state_value(driver.location)  # Assume driver hasn't moved if idle
+            # Expected SARSA
+            v1 = 0
+            for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
+                v1 += probability * self.state_value(destination)
             update = self.idle_reward + self.gamma * v1 - v0
             self.update_state_value(driver.location, self.alpha * update)
 
