@@ -1,9 +1,11 @@
 import collections
 import csv
 import math
+import numpy as np
 import os
 import random
 from abc import abstractmethod
+from scipy import optimize
 from typing import Dict, List, Set, Tuple
 
 from parse import DispatchCandidate, Driver, HEX_GRID, Request
@@ -56,17 +58,41 @@ class ScoredCandidate:
         return f'{self.candidate}|{self.score}'
 
 
+def hungarian(costs: List[ScoredCandidate]) -> Dict[str, str]:
+    dtoi, itod = dict(), dict()
+    rtoj, jtor = dict(), dict()
+
+    for c in costs:
+        if c.candidate.driver_id not in dtoi:
+            i = len(dtoi)
+            dtoi[c.candidate.driver_id] = i
+            itod[i] = c.candidate.driver_id
+        if c.candidate.request_id not in rtoj:
+            j = len(rtoj)
+            rtoj[c.candidate.request_id] = j
+            jtor[j] = c.candidate.request_id
+
+    cost_matrix = np.zeros((len(dtoi), len(rtoj)))
+    for c in costs:
+        i, j = dtoi[c.candidate.driver_id], rtoj[c.candidate.request_id]
+        cost_matrix[i, j] = -c.score
+
+    rows, cols = optimize.linear_sum_assignment(cost_matrix)
+    return {jtor[j]: itod[i] for i, j in zip(rows, cols)}
+
+
 class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
+
         # Expected gain from each driver in (location)
         self.state_values = Dispatcher._init_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
-                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
-        # Rank candidates based on incremental driver value improvement
-        ranking = []  # type: List[ScoredCandidate]
+                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, str]:
+        # Score candidates based on incremental driver value improvement
+        scored_candidates = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
             driver = drivers[candidate.driver_id]
@@ -78,24 +104,20 @@ class Sarsa(Dispatcher):
             if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
                 update = expected_reward + self.gamma * v1 - v0
-                ranking.append(ScoredCandidate(candidate, update))
+                scored_candidates.append(ScoredCandidate(candidate, update))
 
-        # Assign drivers
-        assigned_driver_ids = set()  # type: Set[str]
-        dispatch = dict()  # type: Dict[str, DispatchCandidate]
-        for scored in sorted(ranking, key=lambda x: x.score, reverse=True):  # type: ScoredCandidate
+        # Assignment
+        dispatch = hungarian(scored_candidates)
+
+        # Update state values
+        for scored in scored_candidates:
             candidate = scored.candidate
-            if candidate.request_id in dispatch or candidate.driver_id in assigned_driver_ids:
-                continue
-            assigned_driver_ids.add(candidate.driver_id)
-            request = requests[candidate.request_id]
-            dispatch[request.request_id] = candidate
-
-            # Update value at driver location
-            driver = drivers[candidate.driver_id]
-            self.update_state_value(driver.location, self.alpha * scored.score)
+            if candidate.request_id in dispatch and dispatch[candidate.request_id] == candidate.driver_id:
+                driver = drivers[candidate.driver_id]
+                self.update_state_value(driver.location, self.alpha * scored.score)
 
         # Reward (negative) for idle driver positions
+        assigned_driver_ids = set(dispatch.values())
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue

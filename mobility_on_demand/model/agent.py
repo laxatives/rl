@@ -19,7 +19,7 @@ class Agent:
         """ Compute the assignment between drivers and passengers at each time step """
         drivers, requests, candidates = parse.parse_dispatch(dispatch_input)
         dispatch = self.dispatcher.dispatch(drivers, requests, candidates)
-        return [dict(order_id=order_id, driver_id=d.driver_id) for order_id, d in dispatch.items()]
+        return [dict(order_id=order_id, driver_id=driver_id) for order_id, driver_id in dispatch.items()]
 
     def reposition(self, reposition_input: Dict[str, Any]) -> List[Dict[str, str]]:
         """ Return target new positions for the given idle drivers """
