@@ -152,6 +152,7 @@ class Sarsa(Dispatcher):
         return set([grid_id for grid_id, _ in self.state_values.keys()])
 
     def state_value(self, grid_id: str, t: float) -> float:
+        # TODO: iterate small -> large kernel
         if self.state_values[self._get_state(grid_id, t)] != 0:
             return self.state_values[self._get_state(grid_id, t)]
 
@@ -162,6 +163,7 @@ class Sarsa(Dispatcher):
 
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
+        # TODO: iterate small -> large kernel
         self.state_values[self._get_state(grid_id, t)] += delta
 
 
