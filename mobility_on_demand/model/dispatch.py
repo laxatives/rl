@@ -122,12 +122,20 @@ class Sarsa(Dispatcher):
             if driver.driver_id in assigned_driver_ids:
                 continue
             v0 = self.state_value(driver.location)
-            # TODO: Expected SARSA
-            v1 = self.state_value(driver.location)
-            #for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-            #    v1 += probability * self.state_value(destination)
+            v1 = 0
+            for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
+                v1 += probability * self.state_value(destination)
             update = self.idle_reward + self.gamma * v1 - v0
             self.update_state_value(driver.location, self.alpha * update)
+
+        # Update value (positive) for open requests
+        for request in requests.values():
+            if request.request_id in dispatch:
+                continue
+            v0 = self.state_value(request.start_loc)
+            v1 = self.state_value(request.end_loc)
+            update = 0 * (request.reward + self.gamma * v1 - v0)
+            self.update_state_value(request.start_loc, self.alpha * update)
 
         return dispatch
 
@@ -149,59 +157,54 @@ class Dql(Dispatcher):
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
-                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
+                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, str]:
         #  Flip a coin
         if random.random() < 0.5:
             self.student, self.teacher = self.teacher, self.student
 
-        # Rank candidates
-        updates = dict()  # type: Dict[Tuple[str, str], ScoredCandidate]
-        ranking = []  # type: List[ScoredCandidate]
+        # Score candidates based on incremental driver value improvement
+        scored_candidates = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
-            # Teacher provides the destination position value
             request = requests[candidate.request_id]
-            v1 = self.teacher[request.end_loc]
+            driver = drivers[candidate.driver_id]
             self.timestamp = max(request.request_ts, self.timestamp)
 
-            # Compute student update
-            driver = drivers[candidate.driver_id]
-            v0 = self.student[driver.location]
+            v0 = self.state_value(driver.location)  # Value of the driver current position
+            v1 = self.state_value(request.end_loc)  # Value of the proposed new position
             expected_reward = completion_rate(candidate.distance) * request.reward
-            update = expected_reward + self.gamma * v1 - v0
-            updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
+            if expected_reward > 0:
+                # Best incremental improvement (get the ride AND improve driver position)
+                update = expected_reward + self.gamma * v1 - v0
+                scored_candidates.append(ScoredCandidate(candidate, update))
 
-            # Joint Ranking for actual driver assignment
-            v1 = self.state_value(request.end_loc)
-            expected_gain = expected_reward + self.gamma * v1
-            ranking.append(ScoredCandidate(candidate, expected_gain))
+        # Assignment
+        dispatch = hungarian(scored_candidates)
 
-        # Assign drivers
-        assigned_driver_ids = set()  # type: Set[str]
-        dispatch = dict()  # type: Dict[str, DispatchCandidate]
-        for scored in sorted(ranking, key=lambda x: x.score, reverse=True):  # type: ScoredCandidate
+        # Update state values
+        for scored in scored_candidates:
             candidate = scored.candidate
-            if candidate.request_id in dispatch or candidate.driver_id in assigned_driver_ids:
-                continue
-            assigned_driver_ids.add(candidate.driver_id)
+            if candidate.request_id in dispatch and dispatch[candidate.request_id] == candidate.driver_id:
+                # Teacher provides the destination position value
+                request = requests[candidate.request_id]
+                v1 = self.teacher[request.end_loc]
+                self.timestamp = max(request.request_ts, self.timestamp)
 
-            request = requests[candidate.request_id]
-            driver = drivers[candidate.driver_id]
-            dispatch[request.request_id] = candidate
-
-            # Update student for selected candidate
-            v0 = self.state_value(driver.location)
-            gain = updates[(candidate.request_id, candidate.driver_id)].score
-            self.update_state_value(driver.location, self.alpha * (gain - v0))
+                # Compute student update
+                driver = drivers[candidate.driver_id]
+                v0 = self.student[driver.location]
+                expected_reward = completion_rate(candidate.distance) * request.reward
+                update = expected_reward + self.gamma * v1 - v0
+                self.update_state_value(driver.location, self.alpha * update)
 
         # Reward (negative) for idle driver positions
+        assigned_driver_ids = set(dispatch.values())
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            v0 = self.student[driver.location]
-            # Expected Sarsa
+            v0 = self.state_value(driver.location)
             v1 = 0
             for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-                v1 += probability * self.teacher[destination]
+                v1 += probability * self.state_value(destination)
             update = self.idle_reward + self.gamma * v1 - v0
             self.update_state_value(driver.location, self.alpha * update)
 
@@ -211,7 +214,6 @@ class Dql(Dispatcher):
                 continue
             v0 = self.student[request.start_loc]
             v1 = self.teacher[request.end_loc]
-            # TODO: open request ablation study
             update = 0 * (request.reward + self.gamma * v1 - v0)
             self.update_state_value(request.start_loc, self.alpha * update)
 
@@ -221,7 +223,7 @@ class Dql(Dispatcher):
         return set(self.student.keys()).union(set(self.teacher.keys()))
 
     def state_value(self, grid_id: str) -> float:
-        return self.student[grid_id] + self.teacher[grid_id]
+        return 0.5 * (self.student[grid_id] + self.teacher[grid_id])
 
     def update_state_value(self, grid_id: str, delta: float) -> None:
         self.student[grid_id] += delta
