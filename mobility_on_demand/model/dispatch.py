@@ -152,9 +152,11 @@ class Sarsa(Dispatcher):
         return set([grid_id for grid_id, _ in self.state_values.keys()])
 
     def state_value(self, grid_id: str, t: float) -> float:
-        # TODO: iterate small -> large kernel
-        if self.state_values[self._get_state(grid_id, t)] != 0:
-            return self.state_values[self._get_state(grid_id, t)]
+        if (self.state_values[self._get_state(grid_id, t)] != 0 and
+                self.state_values[self._get_state(grid_id, t + 3600)] != 0):
+            u = (t % 3600) / 3600
+            return (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
+                   u * self.state_values[self._get_state(grid_id, t + 3600)]
 
         value = 0
         for i in range(24*7):
@@ -163,8 +165,9 @@ class Sarsa(Dispatcher):
 
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
-        # TODO: iterate small -> large kernel
-        self.state_values[self._get_state(grid_id, t)] += delta
+        u = (t % 3600) / 3600
+        self.state_values[self._get_state(grid_id, t)] += (1 - u) * delta
+        self.state_values[self._get_state(grid_id, t + 3600)] += u * delta
 
 
 class Dql(Dispatcher):
