@@ -2,6 +2,7 @@ import csv
 import collections
 import math
 import os
+import random
 import time
 from typing import Dict, List, Tuple
 
@@ -53,6 +54,10 @@ class Grid:
     def lookup(self, lng: float, lat: float) -> str:
         _, i = self.kdtree.query([lng, lat])
         return self.grid_ids[i]
+
+    def dither_lookup(self, lng: float, lat: float, k: int) -> str:
+        _, indices = self.kdtree.query([lng, lat], k)
+        return self.grid_ids[random.choice(indices)]
 
     def distance(self, x: str, y: str, fast=True) -> float:
         """ Return haversine distance in meters """

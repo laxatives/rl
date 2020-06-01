@@ -1,6 +1,6 @@
 import math
 from abc import abstractmethod
-from typing import Dict, List, Set
+from typing import Dict, List
 
 from dispatch import Dispatcher
 from parse import HEX_GRID, RepositionData

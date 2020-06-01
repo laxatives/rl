@@ -16,6 +16,10 @@ class GridTest(unittest.TestCase):
         grid_id = self.grid.lookup(104.52, 30.37)
         assert grid_id == '15948343c6223064', grid_id
 
+        grid_id = self.grid.dither_lookup(104.52, 30.37, 7)
+        assert grid_id in {'15948343c6223064', 'dc7f8a7a0069a2e4', '4d5bd5dc7629e947', '25faa4a4344cee51',
+                           'ef9c15165fee0f77', '972c3bd621165228', 'e391637dfc8d5bd0'}
+
     def test_distance_fast(self):
         # SE: (30.65924666666667, 104.12614), NW: (30.73054666666667, 104.04442)
         distance = self.grid.distance('386c78bc3c226d88', '926d27c14e84f5d0')
