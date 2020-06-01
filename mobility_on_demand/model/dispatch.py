@@ -110,7 +110,8 @@ class Sarsa(Dispatcher):
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                update = expected_reward + self.gamma * v1 - v0
+                discount = math.pow(self.gamma, request.finish_ts - request.request_ts + candidate.eta / STEP_SECONDS)
+                update = expected_reward + discount * v1 - v0
                 scored_candidates.append(ScoredCandidate(candidate, update))
 
         # Assignment
@@ -198,7 +199,8 @@ class Dql(Dispatcher):
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                update = expected_reward + self.gamma * v1 - v0
+                discount = math.pow(self.gamma, request.finish_ts - request.request_ts + candidate.eta / STEP_SECONDS)
+                update = expected_reward + discount * v1 - v0
                 scored_candidates.append(ScoredCandidate(candidate, update))
 
         # Assignment
