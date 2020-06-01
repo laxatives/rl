@@ -105,12 +105,12 @@ class Sarsa(Dispatcher):
             self.timestamp = max(request.request_ts, self.timestamp)
 
             v0 = self.state_value(driver.location, self.timestamp)  # Value of the driver current position
-            end_ts = self.timestamp + request.finish_ts - request.request_ts + candidate.eta
+            end_ts = self.timestamp + candidate.eta + request.finish_ts - request.request_ts
             v1 = self.state_value(request.end_loc, end_ts)  # Value of the proposed new position
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                discount = math.pow(self.gamma, request.finish_ts - request.request_ts + candidate.eta / STEP_SECONDS)
+                discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
                 update = expected_reward + discount * v1 - v0
                 scored_candidates.append(ScoredCandidate(candidate, update))
 
@@ -144,7 +144,7 @@ class Sarsa(Dispatcher):
             v0 = self.state_value(request.start_loc, self.timestamp)
             end_ts = self.timestamp + request.finish_ts - request.request_ts
             v1 = self.state_value(request.end_loc, end_ts)
-            update = 0 * (request.reward + self.gamma * v1 - v0)
+            update = 0 * (request.reward + math.pow(self.gamma, request.finish_ts - request.request_ts) * v1 - v0)
             self.update_state_value(request.start_loc, self.timestamp, self.alpha * update)
 
         return dispatch
@@ -194,12 +194,12 @@ class Dql(Dispatcher):
             self.timestamp = max(request.request_ts, self.timestamp)
 
             v0 = self.state_value(driver.location, self.timestamp)  # Value of the driver current position
-            end_ts = self.timestamp + request.finish_ts - request.request_ts + candidate.eta
+            end_ts = self.timestamp + candidate.eta + request.finish_ts - request.request_ts
             v1 = self.state_value(request.end_loc, end_ts)  # Value of the proposed new position
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                discount = math.pow(self.gamma, request.finish_ts - request.request_ts + candidate.eta / STEP_SECONDS)
+                discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
                 update = expected_reward + discount * v1 - v0
                 scored_candidates.append(ScoredCandidate(candidate, update))
 
@@ -211,16 +211,17 @@ class Dql(Dispatcher):
             candidate = scored.candidate
             if candidate.request_id in dispatch and dispatch[candidate.request_id] == candidate.driver_id:
                 request = requests[candidate.request_id]
-                self.timestamp = max(request.request_ts, self.timestamp)
 
                 # Teacher provides the destination position value
-                v1 = self._get_teacher_value(request.end_loc, self.timestamp + request.finish_ts - request.request_ts)
+                v1 = self._get_teacher_value(request.end_loc,
+                                             self.timestamp + candidate.eta + request.finish_ts - request.request_ts)
 
                 # Compute student update
                 driver = drivers[candidate.driver_id]
                 v0 = self._get_student_value(request.start_loc, self.timestamp)
                 expected_reward = completion_rate(candidate.distance) * request.reward
-                update = expected_reward + self.gamma * v1 - v0
+                discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
+                update = expected_reward + discount * v1 - v0
                 self.update_state_value(driver.location, self.timestamp, self.alpha * update)
 
         # Reward (negative) for idle driver positions
@@ -241,7 +242,7 @@ class Dql(Dispatcher):
                 continue
             v0 = self._get_student_value(request.start_loc, self.timestamp)
             v1 = self._get_teacher_value(request.end_loc, self.timestamp + request.finish_ts - request.request_ts)
-            update = 0 * (request.reward + self.gamma * v1 - v0)
+            update = 0 * (request.reward + math.pow(self.gamma, request.finish_ts - request.request_ts) * v1 - v0)
             self.update_state_value(request.start_loc, self.timestamp, self.alpha * update)
 
         return dispatch
