@@ -105,7 +105,7 @@ class Sarsa(Dispatcher):
             self.timestamp = max(request.request_ts, self.timestamp)
 
             v0 = self.state_value(driver.location, self.timestamp)  # Value of the driver current position
-            end_ts = self.timestamp + request.finish_ts - request.request_ts
+            end_ts = self.timestamp + request.finish_ts - request.request_ts + candidate.eta
             v1 = self.state_value(request.end_loc, end_ts)  # Value of the proposed new position
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
@@ -193,7 +193,7 @@ class Dql(Dispatcher):
             self.timestamp = max(request.request_ts, self.timestamp)
 
             v0 = self.state_value(driver.location, self.timestamp)  # Value of the driver current position
-            end_ts = self.timestamp + request.finish_ts - request.request_ts
+            end_ts = self.timestamp + request.finish_ts - request.request_ts + candidate.eta
             v1 = self.state_value(request.end_loc, end_ts)  # Value of the proposed new position
             expected_reward = completion_rate(candidate.distance) * request.reward
             if expected_reward > 0:
