@@ -55,10 +55,6 @@ class Grid:
         _, i = self.kdtree.query([lng, lat])
         return self.grid_ids[i]
 
-    def dither_lookup(self, lng: float, lat: float, k: int) -> str:
-        _, indices = self.kdtree.query([lng, lat], k)
-        return self.grid_ids[random.choice(indices)]
-
     def distance(self, x: str, y: str, fast=True) -> float:
         """ Return haversine distance in meters """
         if x not in self.grids or y not in self.grids:
