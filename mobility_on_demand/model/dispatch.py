@@ -17,10 +17,11 @@ STEP_SECONDS = 2
 
 
 class Dispatcher:
-    def __init__(self, alpha, gamma, idle_reward):
+    def __init__(self, alpha, gamma, idle_reward, open_reward):
         self.alpha = alpha
         self.gamma = gamma
         self.idle_reward = idle_reward
+        self.open_reward = open_reward
 
     @staticmethod
     def _init_state_values() -> Dict[Tuple[str, int], float]:
@@ -88,8 +89,8 @@ def hungarian(costs: List[ScoredCandidate]) -> Dict[str, str]:
 
 
 class Sarsa(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward):
-        super().__init__(alpha, gamma, idle_reward)
+    def __init__(self, alpha, gamma, idle_reward, open_reward):
+        super().__init__(alpha, gamma, idle_reward, open_reward)
 
         # Expected gain from each driver in (location)
         self.state_values = Dispatcher._init_state_values()
@@ -144,7 +145,8 @@ class Sarsa(Dispatcher):
             v0 = self.state_value(request.start_loc, self.timestamp)
             end_ts = self.timestamp + request.finish_ts - request.request_ts
             v1 = self.state_value(request.end_loc, end_ts)
-            update = 0 * (request.reward + math.pow(self.gamma, request.finish_ts - request.request_ts) * v1 - v0)
+            discount = math.pow(self.gamma, request.finish_ts - request.request_ts)
+            update = self.open_reward * (request.reward + discount * v1 - v0)
             self.update_state_value(request.start_loc, self.timestamp, self.alpha * update)
 
         return dispatch
@@ -174,8 +176,8 @@ class Sarsa(Dispatcher):
 
 
 class Dql(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward):
-        super().__init__(alpha, gamma, idle_reward)
+    def __init__(self, alpha, gamma, idle_reward, open_reward):
+        super().__init__(alpha, gamma, idle_reward, open_reward)
         self.student = Dispatcher._init_state_values()
         self.teacher = Dispatcher._init_state_values()
         self.timestamp = 0
@@ -242,7 +244,8 @@ class Dql(Dispatcher):
                 continue
             v0 = self._get_student_value(request.start_loc, self.timestamp)
             v1 = self._get_teacher_value(request.end_loc, self.timestamp + request.finish_ts - request.request_ts)
-            update = 0 * (request.reward + math.pow(self.gamma, request.finish_ts - request.request_ts) * v1 - v0)
+            discount = math.pow(self.gamma, request.finish_ts - request.request_ts)
+            update = self.open_reward * (request.reward + discount * v1 - v0)
             self.update_state_value(request.start_loc, self.timestamp, self.alpha * update)
 
         return dispatch

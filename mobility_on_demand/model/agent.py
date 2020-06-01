@@ -11,8 +11,8 @@ import reposition as repositioner
 
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
-    def __init__(self, alpha=0.1, dispatch_gamma=0.9997, idle_reward=0, reposition_gamma=0.9997):
-        self.dispatcher = dispatcher.Sarsa(alpha, dispatch_gamma, idle_reward)
+    def __init__(self, alpha=2/30, dispatch_gamma=0.97, idle_reward=-2/900, open_reward=2/300, reposition_gamma=0.97):
+        self.dispatcher = dispatcher.Sarsa(alpha, dispatch_gamma, idle_reward, open_reward)
         self.repositioner = repositioner.StateValueGreedy(self.dispatcher, reposition_gamma)
 
     def dispatch(self, dispatch_input: List[Dict[str, Any]]) -> List[Dict[str, str]]:
