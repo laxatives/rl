@@ -185,6 +185,7 @@ class Dql(Dispatcher):
         super().__init__(alpha, gamma, idle_reward, open_reward)
         self.student = Dispatcher._init_state_values()
         self.teacher = Dispatcher._init_state_values()
+        self.fallback_position_values = Dispatcher._fallback_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -267,7 +268,9 @@ class Dql(Dispatcher):
 
     def state_value(self, grid_id: str, t: float) -> float:
         state = self._get_state(grid_id, t)
-        return 0.5 * (self.student[state] + self.teacher[state])
+        if state in self.student and state in self.teacher:
+            return 0.5 * (self.student[state] + self.teacher[state])
+        return self.fallback_position_values[grid_id]
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
         self.student[self._get_state(grid_id, t)] += delta
