@@ -1,12 +1,10 @@
 import collections
 import csv
 import math
-import numpy as np
 import os
 import random
 import time
 from abc import abstractmethod
-from scipy import optimize
 from typing import Dict, List, Set, Tuple
 
 from parse import DispatchCandidate, Driver, HEX_GRID, Request
@@ -73,29 +71,6 @@ class ScoredCandidate:
 
     def __repr__(self):
         return f'{self.candidate}|{self.score}'
-
-
-def hungarian(costs: List[ScoredCandidate]) -> Dict[str, str]:
-    dtoi, itod = dict(), dict()
-    rtoj, jtor = dict(), dict()
-
-    for c in costs:
-        if c.candidate.driver_id not in dtoi:
-            i = len(dtoi)
-            dtoi[c.candidate.driver_id] = i
-            itod[i] = c.candidate.driver_id
-        if c.candidate.request_id not in rtoj:
-            j = len(rtoj)
-            rtoj[c.candidate.request_id] = j
-            jtor[j] = c.candidate.request_id
-
-    cost_matrix = np.zeros((len(dtoi), len(rtoj)))
-    for c in costs:
-        i, j = dtoi[c.candidate.driver_id], rtoj[c.candidate.request_id]
-        cost_matrix[i, j] = -c.score
-
-    rows, cols = optimize.linear_sum_assignment(cost_matrix)
-    return {jtor[j]: itod[i] for i, j in zip(rows, cols)}
 
 
 class Sarsa(Dispatcher):
@@ -170,13 +145,14 @@ class Sarsa(Dispatcher):
         return set([grid_id for grid_id, _ in self.state_values.keys()])
 
     def state_value(self, grid_id: str, t: float) -> float:
+        value = self.fallback_position_values[grid_id]
         if (self.state_values[self._get_state(grid_id, t)] != 0 and
                 self.state_values[self._get_state(grid_id, t + 3600)] != 0):
             u = (t % 3600) / 3600
-            return (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
-                   u * self.state_values[self._get_state(grid_id, t + 3600)]
+            value += (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
+                          u * self.state_values[self._get_state(grid_id, t + 3600)]
 
-        return self.fallback_position_values[grid_id]
+        return value
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
         u = (t % 3600) / 3600
@@ -274,10 +250,11 @@ class Dql(Dispatcher):
         return self.teacher[self._get_state(grid_id, t)]
 
     def state_value(self, grid_id: str, t: float) -> float:
+        value = self.fallback_position_values[grid_id]
         state = self._get_state(grid_id, t)
         if state in self.student and state in self.teacher:
-            return 0.5 * (self.student[state] + self.teacher[state])
-        return self.fallback_position_values[grid_id]
+            value += 0.5 * (self.student[state] + self.teacher[state])
+        return value
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
         self.student[self._get_state(grid_id, t)] += delta

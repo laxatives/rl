@@ -38,29 +38,6 @@ class DispatchTest(unittest.TestCase):
             assert d
 
     @staticmethod
-    def test_hungarian():
-        scored_candidates = [
-            dispatch.ScoredCandidate(parse.DispatchCandidate(
-                dict(driver_id='d_a', order_id='r_1', order_driver_distance=0, pick_up_eta=0)), 0),
-            dispatch.ScoredCandidate(parse.DispatchCandidate(
-                dict(driver_id='d_a', order_id='r_2', order_driver_distance=0, pick_up_eta=0)), 20),
-            dispatch.ScoredCandidate(parse.DispatchCandidate(
-                dict(driver_id='d_b', order_id='r_1', order_driver_distance=0, pick_up_eta=0)), 10),
-            dispatch.ScoredCandidate(parse.DispatchCandidate(
-                dict(driver_id='d_b', order_id='r_2', order_driver_distance=0, pick_up_eta=0)), 25),
-            dispatch.ScoredCandidate(parse.DispatchCandidate(
-                dict(driver_id='d_c', order_id='r_1', order_driver_distance=0, pick_up_eta=0)), 1),
-            dispatch.ScoredCandidate(parse.DispatchCandidate(
-                dict(driver_id='d_z', order_id='r_99', order_driver_distance=0, pick_up_eta=0)), 1),
-        ]
-        assignment = dispatch.hungarian(scored_candidates)
-        assert assignment and len(assignment) == 3
-        assert assignment['r_1'] == 'd_b'  # reward 10
-        assert assignment['r_2'] == 'd_a'  # reward 20
-        assert assignment['r_99'] == 'd_z'  # reward 1
-
-
-    @staticmethod
     def test_cancel_rate():
         rate = dispatch.completion_rate(0)
         assert 0.97 < rate < 1.0, rate
