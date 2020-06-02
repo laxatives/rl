@@ -146,11 +146,10 @@ class Sarsa(Dispatcher):
 
     def state_value(self, grid_id: str, t: float) -> float:
         value = self.fallback_position_values[grid_id]
-        if (self.state_values[self._get_state(grid_id, t)] != 0 and
-                self.state_values[self._get_state(grid_id, t + 3600)] != 0):
-            u = (t % 3600) / 3600
-            value += (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
-                          u * self.state_values[self._get_state(grid_id, t + 3600)]
+
+        u = (t % 3600) / 3600
+        value += (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
+                u * self.state_values[self._get_state(grid_id, t + 3600)]
         return value
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
