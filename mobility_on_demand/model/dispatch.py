@@ -109,8 +109,8 @@ class Sarsa(Dispatcher):
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, str]:
-        # Score candidates based on incremental driver value improvement
-        scored_candidates = []  # type: List[ScoredCandidate]
+        # Rank candidates based on incremental driver value improvement
+        ranked = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
             driver = drivers[candidate.driver_id]
@@ -124,20 +124,30 @@ class Sarsa(Dispatcher):
                 # Best incremental improvement (get the ride AND improve driver position)
                 discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
                 update = expected_reward + discount * v1 - v0
-                scored_candidates.append(ScoredCandidate(candidate, update))
+                ranked.append(ScoredCandidate(candidate, update))
 
-        # Assignment
-        dispatch = hungarian(scored_candidates)
+        # Assign drivers
+        assigned_driver_ids = set()  # type: Set[str]
+        dispatch = dict()  # type: Dict[str, str]
+        for scored in sorted(ranked, key=lambda x: x.score, reverse=True):  # type: ScoredCandidate
+            candidate = scored.candidate
+            if candidate.request_id in dispatch or candidate.driver_id in assigned_driver_ids:
+                continue
+            assigned_driver_ids.add(candidate.driver_id)
+            request = requests[candidate.request_id]
+            dispatch[request.request_id] = candidate.driver_id
+
+            driver = drivers[candidate.driver_id]
+            self.update_state_value(driver.location, self.timestamp, self.alpha * scored.score)
 
         # Update state values
-        for scored in scored_candidates:
+        for scored in ranked:
             candidate = scored.candidate
             if candidate.request_id in dispatch and dispatch[candidate.request_id] == candidate.driver_id:
                 driver = drivers[candidate.driver_id]
                 self.update_state_value(driver.location, self.timestamp, self.alpha * scored.score)
 
         # Reward (negative) for idle driver positions
-        assigned_driver_ids = set(dispatch.values())
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
@@ -195,7 +205,7 @@ class Dql(Dispatcher):
             self.student, self.teacher = self.teacher, self.student
 
         # Score candidates based on incremental driver value improvement
-        scored_candidates = []  # type: List[ScoredCandidate]
+        ranked = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
             request = requests[candidate.request_id]
             driver = drivers[candidate.driver_id]
@@ -209,31 +219,33 @@ class Dql(Dispatcher):
                 # Best incremental improvement (get the ride AND improve driver position)
                 discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
                 update = expected_reward + discount * v1 - v0
-                scored_candidates.append(ScoredCandidate(candidate, update))
+                ranked.append(ScoredCandidate(candidate, update))
 
-        # Assignment
-        dispatch = hungarian(scored_candidates)
-
-        # Update state values
-        for scored in scored_candidates:
+        # Assign drivers
+        assigned_driver_ids = set()  # type: Set[str]
+        dispatch = dict()  # type: Dict[str, str]
+        for scored in sorted(ranked, key=lambda x: x.score, reverse=True):  # type: ScoredCandidate
             candidate = scored.candidate
-            if candidate.request_id in dispatch and dispatch[candidate.request_id] == candidate.driver_id:
-                request = requests[candidate.request_id]
+            if candidate.request_id in dispatch or candidate.driver_id in assigned_driver_ids:
+                continue
+            assigned_driver_ids.add(candidate.driver_id)
 
-                # Teacher provides the destination position value
-                v1 = self._get_teacher_value(request.end_loc,
-                                             self.timestamp + candidate.eta + request.finish_ts - request.request_ts)
+            request = requests[candidate.request_id]
+            dispatch[request.request_id] = candidate.driver_id
 
-                # Compute student update
-                driver = drivers[candidate.driver_id]
-                v0 = self._get_student_value(request.start_loc, self.timestamp)
-                expected_reward = completion_rate(candidate.distance) * request.reward
-                discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
-                update = expected_reward + discount * v1 - v0
-                self.update_state_value(driver.location, self.timestamp, self.alpha * update)
+            # Teacher provides the destination position value
+            v1 = self._get_teacher_value(request.end_loc,
+                                         self.timestamp + candidate.eta + request.finish_ts - request.request_ts)
+
+            # Compute student update
+            driver = drivers[candidate.driver_id]
+            v0 = self._get_student_value(request.start_loc, self.timestamp)
+            expected_reward = completion_rate(candidate.distance) * request.reward
+            discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
+            update = expected_reward + discount * v1 - v0
+            self.update_state_value(driver.location, self.timestamp, self.alpha * update)
 
         # Reward (negative) for idle driver positions
-        assigned_driver_ids = set(dispatch.values())
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
