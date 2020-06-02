@@ -79,7 +79,6 @@ class Sarsa(Dispatcher):
 
         # Expected gain from each driver in (location)
         self.state_values = Dispatcher._init_state_values()
-        self.fallback_position_values = Dispatcher._fallback_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -145,12 +144,9 @@ class Sarsa(Dispatcher):
         return set([grid_id for grid_id, _ in self.state_values.keys()])
 
     def state_value(self, grid_id: str, t: float) -> float:
-        value = self.fallback_position_values[grid_id]
-
         u = (t % 3600) / 3600
-        value += (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
+        return (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
                 u * self.state_values[self._get_state(grid_id, t + 3600)]
-        return value
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
         u = (t % 3600) / 3600
@@ -163,7 +159,6 @@ class Dql(Dispatcher):
         super().__init__(alpha, gamma, idle_reward, open_reward)
         self.student = Dispatcher._init_state_values()
         self.teacher = Dispatcher._init_state_values()
-        self.fallback_position_values = Dispatcher._fallback_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -248,11 +243,8 @@ class Dql(Dispatcher):
         return self.teacher[self._get_state(grid_id, t)]
 
     def state_value(self, grid_id: str, t: float) -> float:
-        value = self.fallback_position_values[grid_id]
         state = self._get_state(grid_id, t)
-        if state in self.student and state in self.teacher:
-            value += 0.5 * (self.student[state] + self.teacher[state])
-        return value
+        return 0.5 * (self.student[state] + self.teacher[state])
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
         self.student[self._get_state(grid_id, t)] += delta
