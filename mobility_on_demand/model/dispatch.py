@@ -34,6 +34,16 @@ class Dispatcher:
         return state_values
 
     @staticmethod
+    def _fallback_state_values() -> Dict[str, float]:
+        state_values = collections.defaultdict(float)
+        value_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'init_values_181486.csv')
+        with open(value_path, 'r') as csvfile:
+            for row in csv.reader(csvfile):
+                grid_id, value = row
+                state_values[grid_id] = float(value)
+        return state_values
+
+    @staticmethod
     def _get_state(grid_id: str, t: float) -> Tuple[str, int]:
         t = time.gmtime(t)
         return grid_id, 24 * t.tm_wday + t.tm_hour
@@ -94,6 +104,7 @@ class Sarsa(Dispatcher):
 
         # Expected gain from each driver in (location)
         self.state_values = Dispatcher._init_state_values()
+        self.fallback_position_values = Dispatcher._fallback_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -155,16 +166,13 @@ class Sarsa(Dispatcher):
         return set([grid_id for grid_id, _ in self.state_values.keys()])
 
     def state_value(self, grid_id: str, t: float) -> float:
-        u = (t % 3600) / 3600
         if (self.state_values[self._get_state(grid_id, t)] != 0 and
                 self.state_values[self._get_state(grid_id, t + 3600)] != 0):
+            u = (t % 3600) / 3600
             return (1 - u) * self.state_values[self._get_state(grid_id, t)] +\
                    u * self.state_values[self._get_state(grid_id, t + 3600)]
 
-        value = 0
-        for i in range(24*7):
-            value += self.state_values[self._get_state(grid_id, t + 3600 * i)]
-        return value
+        return self.fallback_position_values[grid_id]
 
     def update_state_value(self, grid_id: str, t: float, delta: float) -> None:
         u = (t % 3600) / 3600
