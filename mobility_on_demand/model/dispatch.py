@@ -124,7 +124,8 @@ class Sarsa(Dispatcher):
                 # Best incremental improvement (get the ride AND improve driver position)
                 discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
                 update = expected_reward + discount * v1 - v0
-                ranked.append(ScoredCandidate(candidate, update))
+                if update > 0:
+                    ranked.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
         assigned_driver_ids = set()  # type: Set[str]
@@ -212,7 +213,8 @@ class Dql(Dispatcher):
                 # Best incremental improvement (get the ride AND improve driver position)
                 discount = math.pow(self.gamma, (request.finish_ts - request.request_ts + candidate.eta) / STEP_SECONDS)
                 update = expected_reward + discount * v1 - v0
-                ranked.append(ScoredCandidate(candidate, update))
+                if update > 0:
+                    ranked.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
         assigned_driver_ids = set()  # type: Set[str]
