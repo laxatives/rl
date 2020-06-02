@@ -16,7 +16,7 @@ class DispatchTest(unittest.TestCase):
     @classmethod
     def setUp(cls):
         cls.alpha = 2 / (5 * 60)
-        cls.gamma = 0.9
+        cls.gamma = 0.99995
         cls.idle_reward = -2 / (60 * 60)
         cls.open_reward = 2 / (60 * 60)
 
