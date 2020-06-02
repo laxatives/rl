@@ -140,13 +140,6 @@ class Sarsa(Dispatcher):
             driver = drivers[candidate.driver_id]
             self.update_state_value(driver.location, self.timestamp, self.alpha * scored.score)
 
-        # Update state values
-        for scored in ranked:
-            candidate = scored.candidate
-            if candidate.request_id in dispatch and dispatch[candidate.request_id] == candidate.driver_id:
-                driver = drivers[candidate.driver_id]
-                self.update_state_value(driver.location, self.timestamp, self.alpha * scored.score)
-
         # Reward (negative) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
