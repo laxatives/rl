@@ -1,6 +1,6 @@
 import math
 from abc import abstractmethod
-from typing import Dict, List, Set
+from typing import Dict, List
 
 from dispatch import Dispatcher
 from parse import HEX_GRID, RepositionData
@@ -33,29 +33,20 @@ class StateValueGreedy(Repositioner):
         # Rank candidates using Dispatcher state values
         candidate_grid_ids = []  # type: List[ScoredCandidate]
         for grid_id in self.dispatcher.get_grid_ids():
-            value = self.dispatcher.state_value(grid_id)
+            value = self.dispatcher.state_value(grid_id, data.timestamp)
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
-        # Need to filter candidates for brute-force ranking
-        max_candidates = 10 * len(data.drivers)
-        candidate_grid_ids = sorted(candidate_grid_ids, key=lambda x: x.score, reverse=True)[:max_candidates]
-
-        # Rank ETA-discounted incremental gain
-        assigned_grid_ids = set()  # type: Set[str]
+        # Rank discounted incremental gain
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
-            current_value = self.dispatcher.state_value(current_grid_id)
-            best_grid_id, best_value = None, 0  # don't move if negative gain
+            current_value = self.dispatcher.state_value(current_grid_id, data.timestamp)
+            best_grid_id, best_value = current_grid_id, 0  # don't move for lower gain
             for grid_candidate in candidate_grid_ids:
-                if grid_candidate.grid_id in assigned_grid_ids:
-                    continue
-
-                eta = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
-                incremental_value = math.pow(self.gamma, eta) * self.dispatcher.state_value(grid_candidate.grid_id) - current_value
+                time = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
+                discount = math.pow(self.gamma, time)
+                proposed_value = self.dispatcher.state_value(grid_candidate.grid_id, data.timestamp + time)
+                incremental_value = discount * proposed_value - current_value
                 if incremental_value > best_value:
                     best_grid_id, best_value = grid_candidate.grid_id, incremental_value
-
-            new_grid_id = best_grid_id if best_grid_id else current_grid_id
-            assigned_grid_ids.add(new_grid_id)
-            reposition.append(dict(driver_id=driver_id, destination=new_grid_id))
+            reposition.append(dict(driver_id=driver_id, destination=best_grid_id))
         return reposition
