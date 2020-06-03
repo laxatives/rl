@@ -48,7 +48,7 @@ class Dispatcher:
 
     @abstractmethod
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
-                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
+                 candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, str]:
         ...
 
     @abstractmethod

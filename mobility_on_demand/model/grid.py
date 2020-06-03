@@ -2,7 +2,6 @@ import csv
 import collections
 import math
 import os
-import random
 import time
 from typing import Dict, List, Tuple
 
