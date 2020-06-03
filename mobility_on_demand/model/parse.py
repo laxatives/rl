@@ -10,6 +10,7 @@ HEX_GRID = Grid()
 class Driver:
     def __init__(self, od: Dict[str, Any]):
         self.driver_id = od['driver_id']  # type: str
+        self.coord = od['driver_location']  # type: Tuple[float, float]
         self.location = loc_to_grid(od['driver_location'])
 
     def __repr__(self):
@@ -19,7 +20,9 @@ class Driver:
 class Request:
     def __init__(self, od: Dict[str, Any]):
         self.request_id = od['order_id']  # type: str
+        self.start_coord = od['order_start_location']  # type: Tuple[float, float]
         self.start_loc = loc_to_grid(od['order_start_location'])
+        self.end_coord = od['order_finish_location']  # type: Tuple[float, float]
         self.end_loc = loc_to_grid(od['order_finish_location'])
         self.request_ts = od['timestamp']  # type: int
         self.finish_ts = od['order_finish_timestamp']  # type: int
