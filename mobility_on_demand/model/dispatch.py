@@ -72,10 +72,10 @@ class Sarsa(Dispatcher):
 
             v0 = self.state_value(driver.location)  # Value of the driver current position
             v1 = self.state_value(request.end_loc)  # Value of the proposed new position
-            likelihood = completion_rate(candidate.distance)
-            if likelihood > 0:
+            expected_reward = completion_rate(candidate.distance) * request.reward
+            if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                update = likelihood * (request.reward + self.gamma * v1) - v0
+                update = expected_reward + self.gamma * v1 - v0
                 ranking.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
@@ -132,23 +132,22 @@ class Dql(Dispatcher):
         updates = dict()  # type: Dict[Tuple[str, str], ScoredCandidate]
         ranking = []  # type: List[ScoredCandidate]
         for candidate in set(c for cs in candidates.values() for c in cs):  # type: DispatchCandidate
-            driver = drivers[candidate.driver_id]
+            # Teacher provides the destination position value
             request = requests[candidate.request_id]
+            v1 = self.teacher[request.end_loc]
             self.timestamp = max(request.request_ts, self.timestamp)
 
-            likelihood = completion_rate(candidate.distance)
-            if likelihood > 0:
-                # Teacher provides the destination position value
-                v1 = self.teacher[request.end_loc]
-                v0 = self.student[driver.location]
-                update = likelihood * (request.reward + self.gamma * v1) - v0
-                updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
+            # Compute student update
+            driver = drivers[candidate.driver_id]
+            v0 = self.student[driver.location]
+            expected_reward = completion_rate(candidate.distance) * request.reward
+            update = expected_reward + self.gamma * v1 - v0
+            updates[(candidate.request_id, candidate.driver_id)] = ScoredCandidate(candidate, update)
 
-                # Joint Ranking for actual driver assignment
-                v0 = self.state_value(driver.location)
-                v1 = self.state_value(request.end_loc)
-                expected_gain = likelihood * (request.reward + self.gamma * v1) - v0
-                ranking.append(ScoredCandidate(candidate, expected_gain))
+            # Joint Ranking for actual driver assignment
+            v1 = self.state_value(request.end_loc)
+            expected_gain = expected_reward + self.gamma * v1
+            ranking.append(ScoredCandidate(candidate, expected_gain))
 
         # Assign drivers
         assigned_driver_ids = set()  # type: Set[str]
@@ -164,8 +163,9 @@ class Dql(Dispatcher):
             dispatch[request.request_id] = candidate
 
             # Update student for selected candidate
-            update = updates[(candidate.request_id, candidate.driver_id)].score
-            self.update_state_value(driver.location, self.alpha * update)
+            v0 = self.state_value(driver.location)
+            gain = updates[(candidate.request_id, candidate.driver_id)].score
+            self.update_state_value(driver.location, self.alpha * (gain - v0))
 
         # Reward (negative) for idle driver positions
         for driver in drivers.values():
