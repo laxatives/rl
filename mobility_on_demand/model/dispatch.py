@@ -20,7 +20,7 @@ class Dispatcher:
         self.idle_reward = idle_reward
 
     @staticmethod
-    def init_state_values() -> Dict[str, float]:
+    def _init_state_values() -> Dict[str, float]:
         state_values = collections.defaultdict(float)
         value_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'init_values.csv')
         with open(value_path, 'r') as csvfile:
@@ -60,7 +60,7 @@ class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
         # Expected gain from each driver in (location)
-        self.state_values = Dispatcher.init_state_values()
+        self.state_values = Dispatcher._init_state_values()
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
                  candidates: Dict[str, Set[DispatchCandidate]]) -> Dict[str, DispatchCandidate]:
@@ -118,8 +118,8 @@ class Sarsa(Dispatcher):
 class Dql(Dispatcher):
     def __init__(self, alpha, gamma, idle_reward):
         super().__init__(alpha, gamma, idle_reward)
-        self.student = Dispatcher.init_state_values()
-        self.teacher = Dispatcher.init_state_values()
+        self.student = Dispatcher._init_state_values()
+        self.teacher = Dispatcher._init_state_values()
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],

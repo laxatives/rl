@@ -21,7 +21,6 @@ class AgentTest(unittest.TestCase):
 
         for _ in range(3):
             d = agent.dispatch(self.dispatch_observ)
-            print(d)
             assert d
             r = agent.reposition(self.repo_observ)
             assert r
