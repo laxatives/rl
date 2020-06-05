@@ -157,13 +157,12 @@ class Dql(Dispatcher):
             assigned_driver_ids.add(candidate.driver_id)
 
             request = requests[candidate.request_id]
-            driver = drivers[candidate.driver_id]
             dispatch[request.request_id] = candidate
 
             # Update student for selected candidate
-            v0 = self.state_value(driver.coord, driver.location, self.timestamp)
-            gain = updates[(candidate.request_id, candidate.driver_id)].score
-            self._update_state_value(driver.location, self.alpha * (gain - v0))
+            driver = drivers[candidate.driver_id]
+            update = updates[(candidate.request_id, candidate.driver_id)].score
+            self._update_state_value(driver.location, self.alpha * update)
 
         # Update idle drivers
         for driver in drivers.values():
@@ -183,7 +182,7 @@ class Dql(Dispatcher):
         return set(self.student.keys()).union(set(self.teacher.keys()))
 
     def state_value(self, coords: Tuple[float, float], grid_id: str, t: float) -> float:
-        return self.student[grid_id] + self.teacher[grid_id]
+        return 0.5 * (self.student[grid_id] + self.teacher[grid_id])
 
     def _update_state_value(self, grid_id: str, delta: float) -> None:
         self.student[grid_id] += delta
