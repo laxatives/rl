@@ -30,6 +30,7 @@ class Grid:
 
         assert len(self.grids) == 8518
         self.grid_ids = list(self.grids.keys())  # type: List[str]
+        self.grid_index = {grid_id: i for i, grid_id in enumerate(self.grid_ids)}
         self.kdtree = KDTree(list(self.grids.values()))
 
         transitions_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'idle_transition_probability.csv')
