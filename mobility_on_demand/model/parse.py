@@ -1,5 +1,5 @@
 import collections
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 from grid import Grid
 
@@ -8,9 +8,10 @@ HEX_GRID = Grid()
 
 
 class Driver:
-    def __init__(self, od):
+    def __init__(self, od: Dict[str, Any]):
         self.driver_id = od['driver_id']  # type: str
-        self.location = HEX_GRID.lookup(*od['driver_location'])  # type: str
+        self.coord = od['driver_location']  # type: Tuple[float, float]
+        self.location = loc_to_grid(od['driver_location'])
 
     def __repr__(self):
         return f'Driver:{self.driver_id}@{self.location}'
@@ -19,8 +20,10 @@ class Driver:
 class Request:
     def __init__(self, od: Dict[str, Any]):
         self.request_id = od['order_id']  # type: str
-        self.start_loc = HEX_GRID.lookup(*od['order_start_location'])  # type: str
-        self.end_loc = HEX_GRID.lookup(*od['order_finish_location'])  # type: str
+        self.start_coord = od['order_start_location']  # type: Tuple[float, float]
+        self.start_loc = loc_to_grid(od['order_start_location'])
+        self.end_coord = od['order_finish_location']  # type: Tuple[float, float]
+        self.end_loc = loc_to_grid(od['order_finish_location'])
         self.request_ts = od['timestamp']  # type: int
         self.finish_ts = od['order_finish_timestamp']  # type: int
         self.day_of_week = od['day_of_week']  # type: int
@@ -31,7 +34,7 @@ class Request:
 
 
 class DispatchCandidate:
-    def __init__(self, od):
+    def __init__(self, od: Dict[str, Any]):
         self.driver_id = od['driver_id']  # type: str
         self.request_id = od['order_id']  # type: str
         self.distance = od['order_driver_distance']  # type: float
@@ -42,15 +45,15 @@ class DispatchCandidate:
 
 
 class RepositionData:
-    def __init__(self, r):
+    def __init__(self, r: Dict[str, Any]):
         self.timestamp = r['timestamp']  # type: int
-        self.drivers = []
+        self.drivers = []  # type: List[Tuple[str, str]]
         for d in r['driver_info']:
             self.drivers.append((d['driver_id'], d['grid_id']))
         self.day_of_week = r['day_of_week']  # type: int
 
 
-def parse_dispatch(dispatch_input: Dict[str, Any]) -> (Dict[str, Driver], Dict[str, Request], Dict[str, Set[DispatchCandidate]]):
+def parse_dispatch(dispatch_input: List[Dict[str, Any]]) -> (Dict[str, Driver], Dict[str, Request], Dict[str, Set[DispatchCandidate]]):
     drivers = dict()  # type: Dict[str, Driver]
     requests = dict()  # type: Dict[str, Request]
     candidates = collections.defaultdict(set)  # type: Dict[str, Set[DispatchCandidate]]
@@ -65,4 +68,5 @@ def parse_dispatch(dispatch_input: Dict[str, Any]) -> (Dict[str, Driver], Dict[s
 
 def loc_to_grid(location: Tuple[float, float]) -> str:
     # This is actually not bad
-    return f'{location[1]:0.2f},{location[0]:0.2f}'
+    #return f'{location[1]:0.2f},{location[0]:0.2f}'
+    return HEX_GRID.lookup(location[0], location[1])
