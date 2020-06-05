@@ -3,4 +3,4 @@ data/
 *~
 *.zip
 *__pycache__*
-model/*.csv
+*.csv

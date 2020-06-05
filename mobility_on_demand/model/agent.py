@@ -24,4 +24,6 @@ class Agent:
     def reposition(self, reposition_input: Dict[str, Any]) -> List[Dict[str, str]]:
         """ Return target new positions for the given idle drivers """
         data = parse.RepositionData(reposition_input)
-        return self.repositioner.reposition(data)
+        return [dict(driver_id=driver_id, destination=grid_id) for driver_id, grid_id in data.drivers]
+
+        #return self.repositioner.reposition(data)
