@@ -33,6 +33,11 @@ class Grid:
         self.grid_index = {grid_id: i for i, grid_id in enumerate(self.grid_ids)}
         self.kdtree = KDTree(list(self.grids.values()))
 
+        self.neighbors = dict()  # type: Dict[str, List[int]]
+        for grid_id, coord in self.grids.items():
+            _, indices = self.kdtree.query(coord, 7)
+            self.neighbors[grid_id] = indices
+
         transitions_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'idle_transition_probability.csv')
         with open(transitions_path, 'r') as csvfile:
             for row in csv.reader(csvfile):

@@ -12,7 +12,7 @@ import reposition as repositioner
 class Agent:
     """ Agent for dispatching and repositioning drivers for the 2020 ACM SIGKDD Cup Competition """
     def __init__(self, alpha=2/(5*60), dispatch_gamma=0.9, reposition_gamma=0.9997):
-        self.dispatcher = approximation.FunctionApprox(alpha, dispatch_gamma)
+        self.dispatcher = approximation.LinearApprox(alpha, dispatch_gamma)
         self.repositioner = repositioner.StateValueGreedy(self.dispatcher, reposition_gamma)
 
     def dispatch(self, dispatch_input: List[Dict[str, Any]]) -> List[Dict[str, str]]:
@@ -25,5 +25,4 @@ class Agent:
         """ Return target new positions for the given idle drivers """
         data = parse.RepositionData(reposition_input)
         return [dict(driver_id=driver_id, destination=grid_id) for driver_id, grid_id in data.drivers]
-
         #return self.repositioner.reposition(data)
