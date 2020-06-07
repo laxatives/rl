@@ -1,5 +1,5 @@
 # Reinforcement Learning
-Implementations to problems described in Sutton & Barto
+Illustrated examples from Sutton & Barto
 
 ## Sutton & Barto Exercise 5.12: Racetrack
 
