@@ -1,6 +1,6 @@
 .idea/
 data/
 *~
-submission.zip
+*.zip
 *__pycache__*
-model/*.csv
+*.csv
