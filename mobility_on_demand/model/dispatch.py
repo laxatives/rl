@@ -6,7 +6,7 @@ import random
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
-from parse import DispatchCandidate, Driver, HEX_GRID, Request
+from parse import DispatchCandidate, Driver, Request
 
 
 CANCEL_DISTANCE_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
@@ -14,11 +14,9 @@ STEP_SECONDS = 2
 
 
 class Dispatcher:
-    def __init__(self, alpha, gamma, idle_reward):
+    def __init__(self, alpha, gamma):
         self.alpha = alpha
         self.gamma = gamma
-        self.idle_reward = idle_reward
-
     @staticmethod
     def _init_state_values() -> Dict[str, float]:
         state_values = collections.defaultdict(float)
@@ -57,8 +55,8 @@ class ScoredCandidate:
 
 
 class Sarsa(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward):
-        super().__init__(alpha, gamma, idle_reward)
+    def __init__(self, alpha, gamma):
+        super().__init__(alpha, gamma)
         # Expected gain from each driver in (location)
         self.state_values = Dispatcher._init_state_values()
 
@@ -93,16 +91,6 @@ class Sarsa(Dispatcher):
             driver = drivers[candidate.driver_id]
             self.update_state_value(driver.location, self.alpha * scored.score)
 
-        # Reward (negative) for idle driver positions
-        for driver in drivers.values():
-            if driver.driver_id in assigned_driver_ids:
-                continue
-            v0 = self.state_value(driver.location)
-            # TODO: idle transition probabilities Expected SARSA
-            v1 = self.state_value(driver.location)  # Assume driver hasn't moved if idle
-            update = self.idle_reward + self.gamma * v1 - v0
-            self.update_state_value(driver.location, self.alpha * update)
-
         return dispatch
 
     def get_grid_ids(self) -> Set[str]:
@@ -116,8 +104,8 @@ class Sarsa(Dispatcher):
 
 
 class Dql(Dispatcher):
-    def __init__(self, alpha, gamma, idle_reward):
-        super().__init__(alpha, gamma, idle_reward)
+    def __init__(self, alpha, gamma):
+        super().__init__(alpha, gamma)
         self.student = Dispatcher._init_state_values()
         self.teacher = Dispatcher._init_state_values()
         self.timestamp = 0
@@ -166,28 +154,6 @@ class Dql(Dispatcher):
             v0 = self.state_value(driver.location)
             gain = updates[(candidate.request_id, candidate.driver_id)].score
             self.update_state_value(driver.location, self.alpha * (gain - v0))
-
-        # Reward (negative) for idle driver positions
-        for driver in drivers.values():
-            if driver.driver_id in assigned_driver_ids:
-                continue
-            v0 = self.student[driver.location]
-            # Expected Sarsa
-            v1 = 0
-            for destination, probability in HEX_GRID.idle_transitions(self.timestamp, driver.location).items():
-                v1 += probability * self.teacher[destination]
-            update = self.idle_reward + self.gamma * v1 - v0
-            self.update_state_value(driver.location, self.alpha * update)
-
-        # Update value (positive) for open requests
-        for request in requests.values():
-            if request.request_id in dispatch:
-                continue
-            v0 = self.student[request.start_loc]
-            v1 = self.teacher[request.end_loc]
-            # TODO: open request ablation study
-            update = 0 * (request.reward + self.gamma * v1 - v0)
-            self.update_state_value(request.start_loc, self.alpha * update)
 
         return dispatch
 
