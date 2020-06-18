@@ -22,7 +22,7 @@ Although this is a toy-problem, Value Iteration forms the basis for many algorit
 
 ![gridworld](images/qlearning.png)
 
-Illustrated solutions to the Gridworld example using algorithms described in chapters 3-7:
+Illustrated solutions to the Gridworld example using algorithms described in part 1, Tabular Methods:
 
 - Linear Programming
 - Dynamic Programming
