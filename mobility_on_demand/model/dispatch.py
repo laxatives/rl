@@ -126,7 +126,7 @@ class Sarsa(Dispatcher):
     def update_state_value(self, coord: Tuple[float, float], delta: float) -> None:
         for i, offset in enumerate(self.offsets):
             grid_id = HEX_GRID.lookup(coord[0] + offset[0] * LNG_OFFSET, coord[1] + offset[1] * LAT_OFFSET)
-            self.state_values_tiled[i][grid_id] += delta / 4
+            self.state_values_tiled[i][grid_id] += delta
 
 def completion_rate(distance_meters: float) -> float:
     return 1 - max(min(CANCEL_DISTANCE_FIT(distance_meters), 1), 0)
