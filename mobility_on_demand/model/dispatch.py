@@ -63,7 +63,7 @@ class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma):
         super().__init__(alpha, gamma)
         # Expected gain from each driver in (location)
-        self.offsets = [[0, 0], [3, 1], [-3, -1], [6, 2]]
+        self.offsets = [[0, 0], [1, 1], [3, 1], [-3, -1]]
         self.state_values_tiled = [Dispatcher._init_state_values() for _ in self.offsets]
         self.timestamp = 0
 
