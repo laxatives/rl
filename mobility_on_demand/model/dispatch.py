@@ -78,13 +78,11 @@ class Sarsa(Dispatcher):
 
             v0 = self.state_value(driver.coord)  # Value of the driver current position
             v1 = self.state_value(request.end_coord)  # Value of the proposed new position
-            likelihood = completion_rate(candidate.distance)
-            if likelihood > 0:
+            expected_reward = completion_rate(candidate.distance) * request.reward
+            if expected_reward > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                complete_update = request.reward + self.gamma * v1 - v0
-                cancel_update = self.gamma * v0 - v0  # no reward, no transition
-                expected_update = likelihood * complete_update + (1 - likelihood) * cancel_update
-                ranking.append(ScoredCandidate(candidate, expected_update))
+                update = expected_reward + self.gamma * v1 - v0
+                ranking.append(ScoredCandidate(candidate, update))
 
         # Assign drivers
         assigned_driver_ids = set()  # type: Set[str]
