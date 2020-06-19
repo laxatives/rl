@@ -5,7 +5,7 @@ import os
 from abc import abstractmethod
 from typing import Dict, List, Set, Tuple
 
-from parse import DispatchCandidate, Driver, HEX_GRID, Request
+from parse import DispatchCandidate, Driver, Request
 
 
 CANCEL_DISTANCE_FIT = lambda x: 0.02880619 * math.exp(0.00075371 * x)
@@ -38,7 +38,7 @@ class Dispatcher:
         ...
 
     @abstractmethod
-    def state_value(self, coord: Tuple[float, float]) -> float:
+    def state_value(self, coord: Tuple[float, float], grid_id: str) -> float:
         ...
 
     @abstractmethod
@@ -46,7 +46,7 @@ class Dispatcher:
         ...
 
     @abstractmethod
-    def update_state_value(self, coord: Tuple[float, float], delta: float) -> None:
+    def update_state_value(self, coord: Tuple[float, float], grid_id: str, delta: float) -> None:
         ...
 
 
@@ -63,8 +63,9 @@ class Sarsa(Dispatcher):
     def __init__(self, alpha, gamma):
         super().__init__(alpha, gamma)
         # Expected gain from each driver in (location)
+        self.state_values_grid = Dispatcher._init_state_values()
         self.offsets = [[0, 0], [1, 1], [3, 1], [-3, -1]]
-        self.state_values_tiled = [Dispatcher._init_state_values() for _ in self.offsets]
+        self.state_values_tiled = [collections.defaultdict(float) for _ in self.offsets]
         self.timestamp = 0
 
     def dispatch(self, drivers: Dict[str, Driver], requests: Dict[str, Request],
@@ -76,8 +77,8 @@ class Sarsa(Dispatcher):
             driver = drivers[candidate.driver_id]
             self.timestamp = max(request.request_ts, self.timestamp)
 
-            v0 = self.state_value(driver.coord)  # Value of the driver current position
-            v1 = self.state_value(request.end_coord)  # Value of the proposed new position
+            v0 = self.state_value(driver.coord, driver.location)  # Value of the driver current position
+            v1 = self.state_value(request.end_coord, request.end_loc)  # Value of the proposed new position
             likelihood = completion_rate(candidate.distance)
             if likelihood > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
@@ -99,35 +100,40 @@ class Sarsa(Dispatcher):
 
             # Update value at driver location
             driver = drivers[candidate.driver_id]
-            self.update_state_value(driver.coord, self.alpha * scored.score)
+            self.update_state_value(driver.coord, driver.location, self.alpha * scored.score)
 
         # Reward (negative) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            v0 = self.state_value(driver.coord)
+            v0 = self.state_value(driver.coord, driver.location)
             v1 = v0  # no transition
             update = self.gamma * v1 - v0  # no reward
-            self.update_state_value(driver.coord, self.alpha * update)
+            self.update_state_value(driver.coord, driver.location, self.alpha * update)
 
         return dispatch
 
     def get_grid_ids(self) -> Set[str]:
-        return set(self.state_values_tiled[0].keys())
+        return set(self.state_values_grid.keys())
 
     def state_value_grid(self, grid_id: str) -> float:
-        return self.state_values_tiled[0][grid_id]
+        return self.state_values_grid[grid_id]
 
-    def state_value(self, coord: Tuple[float, float]) -> float:
-        value = 0
+    @staticmethod
+    def _tiled_hash(lng: float, lat: float) -> str:
+        return f'{lng:0.2f},{lat:0.2f}'
+
+    def state_value(self, coord: Tuple[float, float], grid_id: str) -> float:
+        value = self.state_values_grid[grid_id]
         for i, offset in enumerate(self.offsets):
-            grid_id = HEX_GRID.lookup(coord[0] + offset[0] * LNG_OFFSET, coord[1] + offset[1] * LAT_OFFSET)
+            grid_id = Sarsa._tiled_hash(coord[0] + offset[0] * LNG_OFFSET, coord[1] + offset[1] * LAT_OFFSET)
             value += self.state_values_tiled[i][grid_id]
-        return value / len(self.offsets)
+        return value / (1 + len(self.offsets))
 
-    def update_state_value(self, coord: Tuple[float, float], delta: float) -> None:
+    def update_state_value(self, coord: Tuple[float, float], grid_id: str, delta: float) -> None:
+        self.state_values_grid[grid_id] += delta
         for i, offset in enumerate(self.offsets):
-            grid_id = HEX_GRID.lookup(coord[0] + offset[0] * LNG_OFFSET, coord[1] + offset[1] * LAT_OFFSET)
+            grid_id = Sarsa._tiled_hash(coord[0] + offset[0] * LNG_OFFSET, coord[1] + offset[1] * LAT_OFFSET)
             self.state_values_tiled[i][grid_id] += delta
 
 def completion_rate(distance_meters: float) -> float:
