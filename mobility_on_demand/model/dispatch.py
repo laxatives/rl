@@ -82,9 +82,9 @@ class Sarsa(Dispatcher):
             likelihood = completion_rate(candidate.distance)
             if likelihood > 0:
                 # Best incremental improvement (get the ride AND improve driver position)
-                complete_update = request.reward + self.gamma * v1 - v0
-                cancel_update = self.gamma * v0 - v0  # no reward, no transition
-                expected_update = likelihood * complete_update + (1 - likelihood) * cancel_update
+                #complete_update = request.reward + self.gamma * v1 - v0
+                #cancel_update = self.gamma * v0 - v0  # no reward, no transition
+                expected_update = likelihood * request.reward + self.gamma * v1 - v0
                 ranking.append(ScoredCandidate(candidate, expected_update))
 
         # Assign drivers
