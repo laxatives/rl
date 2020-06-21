@@ -98,18 +98,19 @@ class Sarsa(Dispatcher):
             request = requests[candidate.request_id]
             dispatch[request.request_id] = candidate
 
+            likelihood = completion_rate(candidate.distance)
+            gain = likelihood * request.reward + self.gamma * self.state_value(request.end_coord, request.end_loc)
+
             # Update value at driver location
             driver = drivers[candidate.driver_id]
-            self.update_state_value(driver.coord, driver.location, self.alpha * scored.score)
+            self.update_state_value(driver.coord, driver.location, gain)
 
-        # Reward (negative) for idle driver positions
+        # Reward (zero) for idle driver positions
         for driver in drivers.values():
             if driver.driver_id in assigned_driver_ids:
                 continue
-            v0 = self.state_value(driver.coord, driver.location)
-            v1 = v0  # no transition
-            update = self.gamma * v1 - v0  # no reward
-            self.update_state_value(driver.coord, driver.location, self.alpha * update)
+            gain = self.gamma * self.state_value(driver.coord, driver.location)
+            self.update_state_value(driver.coord, driver.location, gain)
 
         return dispatch
 
@@ -130,11 +131,11 @@ class Sarsa(Dispatcher):
             value += self.state_values_tiled[i][grid_id]
         return value / (1 + len(self.offsets))
 
-    def update_state_value(self, coord: Tuple[float, float], grid_id: str, delta: float) -> None:
-        self.state_values_grid[grid_id] += delta
+    def update_state_value(self, coord: Tuple[float, float], grid_id: str, gain: float) -> None:
+        self.state_values_grid[grid_id] = self.alpha * gain - self.state_values_grid[grid_id]
         for i, offset in enumerate(self.offsets):
             grid_id = Sarsa._tiled_hash(coord[0] + offset[0] * LNG_OFFSET, coord[1] + offset[1] * LAT_OFFSET)
-            self.state_values_tiled[i][grid_id] += delta
+            self.state_values_tiled[i][grid_id] += self.alpha * gain - self.state_values_tiled[i][grid_id]
 
 def completion_rate(distance_meters: float) -> float:
     return 1 - max(min(CANCEL_DISTANCE_FIT(distance_meters), 1), 0)
