@@ -64,7 +64,7 @@ class Sarsa(Dispatcher):
         super().__init__(alpha, gamma)
         # Expected gain from each driver in (location)
         self.state_values_grid = Dispatcher._init_state_values()
-        self.offsets = [[0, 0], [1, 1], [3, 1], [-3, -1]]
+        self.offsets = [[0, 0], [0, 1], [1, 0], [1, 1], [3, 1], [1, 3]]
         self.state_values_tiled = [collections.defaultdict(float) for _ in self.offsets]
         self.timestamp = 0
 
