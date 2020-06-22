@@ -33,18 +33,18 @@ class StateValueGreedy(Repositioner):
         # Rank candidates using Dispatcher state values
         candidate_grid_ids = []  # type: List[ScoredCandidate]
         for grid_id in self.dispatcher.get_grid_ids():
-            value = self.dispatcher.state_value_grid(grid_id)
+            value = self.dispatcher.state_value(grid_id)
             candidate_grid_ids.append(ScoredCandidate(grid_id, value))
 
         # Rank discounted incremental gain
         reposition = []  # type: List[Dict[str, str]]
         for driver_id, current_grid_id in data.drivers:
-            current_value = self.dispatcher.state_value_grid(current_grid_id)
+            current_value = self.dispatcher.state_value(current_grid_id)
             best_grid_id, best_value = current_grid_id, 0  # don't move for lower gain
             for grid_candidate in candidate_grid_ids:
                 time = HEX_GRID.distance(current_grid_id, grid_candidate.grid_id) / SPEED
                 discount = math.pow(self.gamma, time)
-                proposed_value = self.dispatcher.state_value_grid(grid_candidate.grid_id)
+                proposed_value = self.dispatcher.state_value(grid_candidate.grid_id)
                 incremental_value = discount * proposed_value - current_value
                 if incremental_value > best_value:
                     best_grid_id, best_value = grid_candidate.grid_id, incremental_value
