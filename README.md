@@ -57,5 +57,6 @@ Illustrated solutions to the Gridworld example using algorithms described in par
 
 ![kddcup](images/kddcup_05_17.png)
 ![state_values](images/state_values.png)
+![state_values gif](images/state_values.gif)
 
 Work in progress...
