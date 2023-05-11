@@ -60,10 +60,12 @@ Some simple Multi-Armed Bandit algorithms provide distributed streaming online u
 
 A few simple CRUD update endpoints enables widescale experimentation using hundreds or thousands of variants (compared to using 2 in a tradiational A/B experiment).
 
-## ACM SIGKDD CUP 2020: Learning to Dispatch and Reposition
+## Reinforcement Learning for Ridehailing Dispatch and Pricing
 
 ![kddcup](images/kddcup_05_17.png)
 ![state_values](images/state_values.png)
 ![state_values gif](images/state_values.gif)
+
+We have open-sourced our solution (Team Hail Mary) for the ACM SIGKDD CUP 2020: Learning to Dispatch and Reposition.
 
 This work formed the basis for our [2022 ACM SIGKDD Paper](https://dl.acm.org/doi/pdf/10.1145/3534678.3539141) and Lyft's submission to the [2023 Franz Edelman Award for Achievement in Advanced Analytics, Operations Research and Management Science](https://www.informs.org/News-Room/INFORMS-Releases/Awards-Releases/Finalists-Selected-for-the-World-s-Leading-Operations-Research-and-Analytics-Award-2023-INFORMS-Franz-Edelman-Award-Competition-Elevates-Research-that-is-Saving-Lives-Saving-Money-and-Solving-Problems)
