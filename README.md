@@ -49,9 +49,16 @@ Illustrated solutions to the Gridworld example using algorithms described in par
 
 # Other Applications
 
-## Distributed Asynchronous Learning using Ray
+## Distributed Asynchronous Learning using Ray and Multi-Armed Bandits
 
 [nbviewer](https://nbviewer.jupyter.org/url/github.com/laxatives/rl/blob/master/ray.ipynb)
+
+Some simple Multi-Armed Bandit algorithms provide distributed streaming online updates to a shared parameter store (such as DynamoDB). A simple Thompson Sampling algorithm can be used to estimate performance for
+- Bernoulli Distributions (using a Beta-distributed conjugate prior)
+- Normal Distributions (using a Normal-Inverse-Gamma conjugate prior)
+- Multivariate Normal Distributions (using a Normal-Inverse-Wishart conjugate prior)
+
+A few simple CRUD update endpoints enables widescale experimentation using hundreds or thousands of variants (compared to using 2 in a tradiational A/B experiment).
 
 ## ACM SIGKDD CUP 2020: Learning to Dispatch and Reposition
 
