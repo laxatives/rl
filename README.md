@@ -58,7 +58,7 @@ Some simple Multi-Armed Bandit algorithms provide distributed streaming online u
 - Normal Distributions (using a Normal-Inverse-Gamma conjugate prior)
 - Multivariate Normal Distributions (using a Normal-Inverse-Wishart conjugate prior)
 
-A few simple CRUD update endpoints enables widescale experimentation using hundreds or thousands of variants (compared to using 2 in a tradiational A/B experiment).
+A few simple CRUD update endpoints enables widescale experimentation using hundreds or thousands of variants (compared to just 2 in a traditional A/B experiment).
 
 ## Reinforcement Learning for Ridehailing Dispatch and Pricing
 
