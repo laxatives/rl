@@ -59,4 +59,4 @@ Illustrated solutions to the Gridworld example using algorithms described in par
 ![state_values](images/state_values.png)
 ![state_values gif](images/state_values.gif)
 
-Work in progress...
+This work formed the basis for our [2022 ACM SIGKDD Paper](https://dl.acm.org/doi/pdf/10.1145/3534678.3539141) and Lyft's submission to the [2023 Franz Edelman Award for Achievement in Advanced Analytics, Operations Research and Management Science](https://www.informs.org/News-Room/INFORMS-Releases/Awards-Releases/Finalists-Selected-for-the-World-s-Leading-Operations-Research-and-Analytics-Award-2023-INFORMS-Franz-Edelman-Award-Competition-Elevates-Research-that-is-Saving-Lives-Saving-Money-and-Solving-Problems)
